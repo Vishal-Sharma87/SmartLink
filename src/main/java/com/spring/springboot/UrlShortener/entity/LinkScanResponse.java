@@ -1,0 +1,35 @@
+package com.spring.springboot.UrlShortener.entity;
+
+import com.spring.springboot.UrlShortener.enums.FinalVerdict;
+import com.spring.springboot.UrlShortener.enums.VerdictReason;
+
+import lombok.AllArgsConstructor;
+import lombok.Builder;
+import lombok.Data;
+import lombok.NoArgsConstructor;
+
+import java.time.Instant;
+
+import org.springframework.data.annotation.Id;
+import org.springframework.data.mongodb.core.mapping.Document;
+
+@Data
+@Builder
+@NoArgsConstructor
+@AllArgsConstructor
+@Document(collection = "linkScanResponse")
+public class LinkScanResponse {
+
+    @Id
+    private String hash;
+    private String originalUrl;
+    private FinalVerdict.Verdict verdict;
+    private VerdictReason verdictReason;
+    private double harmlessRatio;
+    private double maliciousRatio;
+    private double undetectedRatio;
+    private double timeoutRatio;
+    private int totalEngines;
+
+    private Instant analysedAt;
+}
