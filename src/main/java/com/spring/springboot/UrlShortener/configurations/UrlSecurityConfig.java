@@ -32,7 +32,7 @@ public class UrlSecurityConfig {
                 // Authorize requests
                 .authorizeHttpRequests(auth -> auth
 
-                        .requestMatchers("/user/**").hasRole("USER")
+                        .requestMatchers("/user", "/user/**").hasRole("USER")
                         .requestMatchers(
                                 "/auth/**"
                                 , "/"
