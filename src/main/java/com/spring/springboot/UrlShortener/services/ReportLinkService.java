@@ -5,8 +5,6 @@ import com.spring.springboot.UrlShortener.dto.requestDtos.ReportLinkRequestDto;
 import com.spring.springboot.UrlShortener.advices.exceptions.InvalidOTPException;
 import com.spring.springboot.UrlShortener.advices.exceptions.LinkAlreadyReportedByCurrentEmailOfReporterException;
 import com.spring.springboot.UrlShortener.repositories.MongoReportLinkService;
-import com.spring.springboot.UrlShortener.services.asyncServices.AsyncReportService;
-import com.spring.springboot.UrlShortener.services.auth.OtpService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
