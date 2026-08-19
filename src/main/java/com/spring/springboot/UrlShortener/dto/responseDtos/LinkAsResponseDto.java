@@ -1,5 +1,6 @@
 package com.spring.springboot.UrlShortener.dto.responseDtos;
 
+import com.spring.springboot.UrlShortener.enums.Verdict;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -7,7 +8,6 @@ import lombok.NoArgsConstructor;
 
 import java.time.Instant;
 
-import com.spring.springboot.UrlShortener.enums.FinalVerdict;
 
 @Data
 @AllArgsConstructor
@@ -26,7 +26,7 @@ public class LinkAsResponseDto {
     private String id;
     private String actualUrl;
     private String hashedKey;
-    private FinalVerdict.Verdict status;
+    private Verdict status;
     private Integer clickCnt;
     private Integer reportCnt;
     private Instant creationTime;
