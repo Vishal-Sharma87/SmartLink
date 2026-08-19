@@ -9,8 +9,8 @@ import com.sendgrid.helpers.mail.objects.Email;
 import com.spring.springboot.UrlShortener.dto.emailComponents.EmailContentBuilder;
 import com.spring.springboot.UrlShortener.dto.emailComponents.EmailDto;
 import com.spring.springboot.UrlShortener.entity.UrlUser;
-import com.spring.springboot.UrlShortener.enums.FinalVerdict;
 import com.spring.springboot.UrlShortener.advices.exceptions.SendgridEmailFailedException;
+import com.spring.springboot.UrlShortener.enums.Verdict;
 import com.spring.springboot.UrlShortener.model.LinkCreationDto;
 
 import lombok.RequiredArgsConstructor;
@@ -58,7 +58,7 @@ public class EmailService {
         getSendGridResponse(dto);
     }
 
-    public void sendEmail(FinalVerdict.Verdict verdict, UrlUser userInDb, LinkCreationDto linkCreationDto) {
+    public void sendEmail(Verdict verdict, UrlUser userInDb, LinkCreationDto linkCreationDto) {
 
         EmailDto dto;
         int malCnt = userInDb.getMaliciousUrlsCreatedCount();
