@@ -2,8 +2,9 @@ package com.spring.springboot.UrlShortener.controllers;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.spring.springboot.UrlShortener.dto.RedirectServiceResponseDto;
+import com.spring.springboot.UrlShortener.enums.FinalVerdict;
 import com.spring.springboot.UrlShortener.services.RedirectService;
-import com.spring.springboot.UrlShortener.thirdPartyUtils.virusTotalUtils.virusTotalServices.FinalVerdict;
+
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
