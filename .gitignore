@@ -22,6 +22,9 @@ target/
 
 application-*.yml
 
+# Local environment settings
+.env
+
 ### NetBeans ###
 /nbproject/private/
 /nbbuild/
