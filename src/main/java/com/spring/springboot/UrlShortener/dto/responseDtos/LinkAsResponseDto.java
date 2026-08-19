@@ -1,12 +1,13 @@
 package com.spring.springboot.UrlShortener.dto.responseDtos;
 
-import com.spring.springboot.UrlShortener.thirdPartyUtils.virusTotalUtils.virusTotalServices.FinalVerdict;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
 import java.time.Instant;
+
+import com.spring.springboot.UrlShortener.enums.FinalVerdict;
 
 @Data
 @AllArgsConstructor
