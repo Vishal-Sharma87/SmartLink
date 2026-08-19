@@ -5,8 +5,6 @@ import com.spring.springboot.UrlShortener.dto.RedisDtos.LinkDocForCacheDto;
 import com.spring.springboot.UrlShortener.entity.Links;
 import com.spring.springboot.UrlShortener.advices.exceptions.ResourceWithHashNotExistsException;
 import com.spring.springboot.UrlShortener.dto.RedirectServiceResponseDto;
-import com.spring.springboot.UrlShortener.services.links.Base62;
-import com.spring.springboot.UrlShortener.services.links.LinkService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.mongodb.core.MongoTemplate;
@@ -27,13 +25,7 @@ public class RedirectService {
 
     public RedirectServiceResponseDto getActualUrlIfExists(String hash) {
 
-        Long id;
-        try {
-            id = Base62.decode(hash);
-        } catch (Exception ex) {
-            throw new ResourceWithHashNotExistsException("Malformed short URL");
-        }
-
+        Long id = Base62.decode(hash);
 //        caching -> get -> found ? return : find in database
 
         /*
