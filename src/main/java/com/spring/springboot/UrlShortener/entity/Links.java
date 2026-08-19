@@ -1,11 +1,12 @@
 package com.spring.springboot.UrlShortener.entity;
 
-import com.spring.springboot.UrlShortener.thirdPartyUtils.virusTotalUtils.virusTotalServices.FinalVerdict;
 import lombok.Builder;
 import lombok.Data;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.mongodb.core.index.Indexed;
 import org.springframework.data.mongodb.core.mapping.Document;
+
+import com.spring.springboot.UrlShortener.enums.FinalVerdict;
 
 import java.util.Date;
 import java.util.List;
@@ -51,4 +52,8 @@ public class Links {
 
     //    how many times the link is clicked
     private Integer clickCount;
+
+    public void incrementClickCount() {
+        clickCount++;
+    }
 }
