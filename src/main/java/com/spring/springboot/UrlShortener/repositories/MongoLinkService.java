@@ -2,11 +2,15 @@ package com.spring.springboot.UrlShortener.repositories;
 
 import com.spring.springboot.UrlShortener.advices.exceptions.ResourceNotExistsException;
 import com.spring.springboot.UrlShortener.entity.Links;
+import com.spring.springboot.UrlShortener.enums.FinalVerdict;
+
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.data.mongodb.core.FindAndModifyOptions;
 import org.springframework.data.mongodb.core.MongoTemplate;
 import org.springframework.data.mongodb.core.query.Criteria;
 import org.springframework.data.mongodb.core.query.Query;
+import org.springframework.data.mongodb.core.query.Update;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -129,5 +133,36 @@ public class MongoLinkService {
 
         List<Links> links = mongoTemplate.find(query, Links.class);
         return links.getFirst();
+    }
+
+    public int incrementAndGetReportCount(String hashedKey) {
+        Query query = Query.query(Criteria.where("hashedKey").is(hashedKey));
+        Update update = new Update()
+                .inc("reportCount", 1);
+        Links updated = mongoTemplate.findAndModify(
+                query,
+                update,
+                FindAndModifyOptions.options().returnNew(true),
+                Links.class
+        );
+
+        if (updated == null){
+            throw new ResourceNotExistsException("Link with hashkey: " + hashedKey +" Not exists");
+        }
+
+        return updated.getReportCount();
+    }
+
+    public void updateStatus(String hashedKey, FinalVerdict.Verdict verdict) {
+        Query query = Query.query(Criteria.where("hashedKey").is(hashedKey));
+        Update update = new Update()
+                .set("status", verdict);
+
+        mongoTemplate.findAndModify(
+                query,
+                update,
+                FindAndModifyOptions.options(),
+                Links.class
+        );
     }
 }
