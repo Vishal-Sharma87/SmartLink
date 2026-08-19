@@ -42,9 +42,5 @@ public class AnalysisResultOfVT {
 
         @JsonProperty("timeout")
         private int timeout;
-
-        public int getTotal() {
-            return malicious + suspicious + undetected + harmless + timeout;
-        }
     }
 }
