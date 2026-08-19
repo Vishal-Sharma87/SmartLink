@@ -1,12 +1,11 @@
 package com.spring.springboot.UrlShortener.enums;
 
-import com.fasterxml.jackson.annotation.JsonValue;
+
 import com.spring.springboot.UrlShortener.dto.virusTotalDtos.AnalysisResultOfVT;
 import com.spring.springboot.UrlShortener.entity.LinkScanResponse;
 import com.spring.springboot.UrlShortener.services.LinkScanResponseService;
 
 import lombok.RequiredArgsConstructor;
-import lombok.ToString;
 
 import java.time.Instant;
 
@@ -16,15 +15,7 @@ import org.springframework.stereotype.Service;
 @RequiredArgsConstructor
 public class FinalVerdict {
 
-    @ToString
-    public enum Verdict {
-        SAFE, SUSPICIOUS, UNVERIFIED, MALICIOUS, PENDING_REVERIFICATION;
 
-        @JsonValue
-        public String toJson() {
-            return this.name();
-        }
-    }
 
     private final LinkScanResponseService linkScanResponseService;
 
