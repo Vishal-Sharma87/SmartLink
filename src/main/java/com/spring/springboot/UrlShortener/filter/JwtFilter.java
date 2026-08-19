@@ -1,7 +1,7 @@
 package com.spring.springboot.UrlShortener.filter;
 
-import com.spring.springboot.UrlShortener.services.user.UserDetailsServiceImpl;
-import com.spring.springboot.UrlShortener.services.auth.JwtService;
+import com.spring.springboot.UrlShortener.services.UserDetailsServiceImpl;
+import com.spring.springboot.UrlShortener.services.JwtService;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
