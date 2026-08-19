@@ -1,7 +1,8 @@
 package com.spring.springboot.UrlShortener.dto;
 
 
-import com.spring.springboot.UrlShortener.thirdPartyUtils.virusTotalUtils.virusTotalServices.FinalVerdict;
+import com.spring.springboot.UrlShortener.enums.FinalVerdict;
+
 import lombok.Builder;
 import lombok.Data;
 
