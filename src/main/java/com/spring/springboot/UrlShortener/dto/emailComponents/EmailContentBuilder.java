@@ -5,26 +5,6 @@ import org.springframework.stereotype.Component;
 @Component
 public class EmailContentBuilder {
 
-
-    public EmailDto getEmilDtoWithOtpContent(String otp, String email) {
-        String format = String.format(""" 
-                Dear User,
-                
-                Please use the One-Time Password (OTP) provided below to complete the verification process: 
-                OTP: %s 
-                
-                This OTP is valid for 5 minutes and can be used only once. 
-                
-                For security reasons, please do not share it with anyone. 
-                
-                If you did not initiate this request, please ignore this email or contact our support team immediately. 
-                
-                Thank you, 
-                URLShortener Team 
-                """, otp);
-        return EmailDto.builder().subject("OTP for UrlShortener.").content(format).to(email).build();
-    }
-
     public EmailDto getEmailDtoWithContentUrlShortenedConfirmation(String generatedHash, String longUrl, String email) {
 
         String shortUrl = "url.shortener/" + generatedHash;
