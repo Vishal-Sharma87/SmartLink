@@ -2,8 +2,8 @@ package com.spring.springboot.UrlShortener.repositories;
 
 import com.spring.springboot.UrlShortener.advices.exceptions.ResourceNotExistsException;
 import com.spring.springboot.UrlShortener.entity.Links;
-import com.spring.springboot.UrlShortener.enums.FinalVerdict;
 
+import com.spring.springboot.UrlShortener.enums.Verdict;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.mongodb.core.FindAndModifyOptions;
@@ -153,7 +153,7 @@ public class MongoLinkService {
         return updated.getReportCount();
     }
 
-    public void updateStatus(String hashedKey, FinalVerdict.Verdict verdict) {
+    public void updateStatus(String hashedKey, Verdict verdict) {
         Query query = Query.query(Criteria.where("hashedKey").is(hashedKey));
         Update update = new Update()
                 .set("status", verdict);
