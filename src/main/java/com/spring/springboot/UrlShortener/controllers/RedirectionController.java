@@ -2,7 +2,7 @@ package com.spring.springboot.UrlShortener.controllers;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.spring.springboot.UrlShortener.dto.RedirectServiceResponseDto;
-import com.spring.springboot.UrlShortener.enums.FinalVerdict;
+import com.spring.springboot.UrlShortener.enums.Verdict;
 import com.spring.springboot.UrlShortener.services.RedirectService;
 
 import jakarta.servlet.http.HttpServletRequest;
@@ -14,7 +14,6 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
 
-//@RestController
 @Slf4j
 @Controller // using @Controller because it supports html page rendering and user clicks
 @RequestMapping("/url.shortener")
@@ -43,20 +42,20 @@ public class RedirectionController {
          */
 
         switch (dto.getStatus()) {
-            case FinalVerdict.Verdict.SAFE:
+            case Verdict.SAFE:
                 // Direct redirect
                 model.addAttribute(SHORT_CODE, hash);
                 model.addAttribute(LONG_URL, dto.getLongUrl());
                 return "track";
 
-            case FinalVerdict.Verdict.SUSPICIOUS, FinalVerdict.Verdict.PENDING_REVERIFICATION,
-                 FinalVerdict.Verdict.UNVERIFIED:
+            case Verdict.SUSPICIOUS, Verdict.PENDING_REVERIFICATION,
+                 Verdict.UNVERIFIED:
                 // Show warning + confirm
                 model.addAttribute(SHORT_CODE, hash);
                 model.addAttribute(LONG_URL, dto.getLongUrl());
                 return "suspicious-warning";
 
-            case FinalVerdict.Verdict.MALICIOUS:
+            case Verdict.MALICIOUS:
                 // Show blocked page
                 model.addAttribute("message", "The link you are trying to access is confirmed Malicious.");
                 return "malicious-warning";
