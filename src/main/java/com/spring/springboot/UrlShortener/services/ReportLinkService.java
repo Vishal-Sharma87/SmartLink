@@ -26,9 +26,7 @@ public class ReportLinkService {
          * */
 
 //        step 1: -> validate otp
-        try {
-            otpService.isValidOtp(dto.getReporterEmail(), dto.getOtp());
-        } catch (Exception e) {
+        if (!otpService.isValidOtp(dto.getReporterEmail(), dto.getOtp())){
             throw new InvalidOTPException("Invalid otp, please enter a valid otp");
         }
 
@@ -36,7 +34,8 @@ public class ReportLinkService {
 //        extract hashedKey from the url
 //        actualUrl = url.shortener/hashedKey
 //        key = hashedKey
-        String hashedKey = dto.getLinkToReport().substring(14);
+        String[] parts = dto.getLinkToReport().split("/");
+        String hashedKey =  parts[parts.length - 1];
 
 //        step 3: -> check if user have already reported this report or not
         boolean alreadyReported = mongoReportLinkService.isAlreadyReported(hashedKey, dto);
