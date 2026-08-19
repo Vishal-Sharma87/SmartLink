@@ -4,6 +4,7 @@ import com.spring.springboot.UrlShortener.dto.virusTotalDtos.AnalysisIdOfVT;
 import com.spring.springboot.UrlShortener.dto.virusTotalDtos.AnalysisResultOfVT;
 import com.spring.springboot.UrlShortener.enums.FinalVerdict;
 
+import com.spring.springboot.UrlShortener.enums.Verdict;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.MediaType;
@@ -31,7 +32,7 @@ public class VirusTotalService {
     /**
      * Scans a URL and returns a FinalVerdict asynchronously.
      */
-    public Mono<FinalVerdict.Verdict> scanUrl(String url, String hash) {
+    public Mono<Verdict> scanUrl(String url, String hash) {
 
         return webClient.post()
                 .uri(apiToGetAnalysisId)
@@ -51,7 +52,7 @@ public class VirusTotalService {
                                 return finalVerdict.evaluate(stats, hash, url);
                             });
                 })
-                .onErrorResume(e -> Mono.just(FinalVerdict.Verdict.UNVERIFIED));
+                .onErrorResume(e -> Mono.just(Verdict.UNVERIFIED));
 
     }
 
