@@ -17,7 +17,7 @@ import java.util.List;
 
 
 @Data
-@Document(collection = "abuseReportsOfLinksOfUrlShortener")
+@Document(collection = "link_reports")
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder

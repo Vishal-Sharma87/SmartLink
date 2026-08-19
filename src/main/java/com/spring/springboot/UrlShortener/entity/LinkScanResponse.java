@@ -1,6 +1,6 @@
 package com.spring.springboot.UrlShortener.entity;
 
-import com.spring.springboot.UrlShortener.enums.FinalVerdict;
+import com.spring.springboot.UrlShortener.enums.Verdict;
 import com.spring.springboot.UrlShortener.enums.VerdictReason;
 
 import lombok.AllArgsConstructor;
@@ -17,13 +17,13 @@ import org.springframework.data.mongodb.core.mapping.Document;
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-@Document(collection = "linkScanResponse")
+@Document(collection = "link_scan_matrices")
 public class LinkScanResponse {
 
     @Id
     private String hash;
     private String originalUrl;
-    private FinalVerdict.Verdict verdict;
+    private Verdict verdict;
     private VerdictReason verdictReason;
     private double harmlessRatio;
     private double maliciousRatio;

@@ -19,7 +19,7 @@ import java.util.Date;
 import java.util.List;
 
 @Data
-@Document(collection = "usersOfUrlShortener")
+@Document(collection = "users")
 @Builder
 public class UrlUser implements UserDetails {
 

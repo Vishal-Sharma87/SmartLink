@@ -1,17 +1,17 @@
 package com.spring.springboot.UrlShortener.entity;
 
+import com.spring.springboot.UrlShortener.enums.Verdict;
 import lombok.Builder;
 import lombok.Data;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.mongodb.core.index.Indexed;
 import org.springframework.data.mongodb.core.mapping.Document;
 
-import com.spring.springboot.UrlShortener.enums.FinalVerdict;
 
 import java.util.Date;
 import java.util.List;
 
-@Document(collection = "linksOfUrlShortener")
+@Document(collection = "links")
 @Data
 @Builder
 public class Links {
@@ -35,7 +35,7 @@ public class Links {
     private Date linkCreationTime;
 
     //   current status of the url either safe, malicious or suspicious
-    private FinalVerdict.Verdict status;
+    private Verdict status;
 
 
     //    url reports

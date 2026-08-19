@@ -15,7 +15,7 @@ import java.time.Instant;
 
 @Data
 @Builder
-@Document(collection = "informationOfLinksInUrlShortener")
+@Document(collection = "link_analytics")
 public class LinkInformation {
 
     @Id
