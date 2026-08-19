@@ -4,7 +4,7 @@ import com.spring.springboot.UrlShortener.dto.requestDtos.ReportLinkRequestDto;
 import com.spring.springboot.UrlShortener.dto.emailComponents.EmailContentBuilder;
 import com.spring.springboot.UrlShortener.dto.emailComponents.EmailDto;
 import com.spring.springboot.UrlShortener.entity.AbuseReport;
-import com.spring.springboot.UrlShortener.enums.FinalVerdict;
+import com.spring.springboot.UrlShortener.enums.Verdict;
 import com.spring.springboot.UrlShortener.repositories.AbuseReportRepository;
 import com.spring.springboot.UrlShortener.repositories.MongoLinkService;
 
@@ -34,7 +34,7 @@ public class AsyncReportService {
         int newReportCount = mongoLinkService.incrementAndGetReportCount(hashedKey);
 
         if (newReportCount >= 3){
-            mongoLinkService.updateStatus(hashedKey, FinalVerdict.Verdict.PENDING_REVERIFICATION);
+            mongoLinkService.updateStatus(hashedKey, Verdict.PENDING_REVERIFICATION);
         }
         AbuseReport reportObject = AbuseReport.builder()
                 .reporterName(dto.getReporterName())
