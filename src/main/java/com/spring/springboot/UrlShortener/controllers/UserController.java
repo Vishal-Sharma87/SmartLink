@@ -15,6 +15,12 @@ public class UserController {
 
     private final UserService userService;
 
+    @GetMapping({"", "/"})
+    public ResponseEntity<String> health(){
+        return ResponseEntity.ok("Working");
+    }
+
+
     @PutMapping("/update-user-credentials")
     public ResponseEntity<Void> updateUserCredentials(
             @RequestBody UserCredentialUpdateRequestDto user
