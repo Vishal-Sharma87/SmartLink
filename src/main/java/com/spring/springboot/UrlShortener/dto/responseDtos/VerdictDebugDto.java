@@ -1,7 +1,8 @@
 package com.spring.springboot.UrlShortener.dto.responseDtos;
 import com.fasterxml.jackson.annotation.JsonFormat;
+import com.spring.springboot.UrlShortener.enums.FinalVerdict;
 import com.spring.springboot.UrlShortener.enums.VerdictReason;
-import com.spring.springboot.UrlShortener.thirdPartyUtils.virusTotalUtils.virusTotalServices.FinalVerdict;
+
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
