@@ -5,7 +5,7 @@ import com.spring.springboot.UrlShortener.dto.UrlToShortRequestDto;
 import com.spring.springboot.UrlShortener.dto.responseDtos.LinkAsResponseDto;
 import com.spring.springboot.UrlShortener.entity.LinkScanResponse;
 import com.spring.springboot.UrlShortener.entity.Links;
-import com.spring.springboot.UrlShortener.enums.FinalVerdict;
+import com.spring.springboot.UrlShortener.enums.Verdict;
 import com.spring.springboot.UrlShortener.model.LinkCreationDto;
 import com.spring.springboot.UrlShortener.repositories.LinkRepository;
 import com.spring.springboot.UrlShortener.repositories.MongoLinkService;
@@ -86,7 +86,7 @@ public class LinkService {
         String generatedHash = Base62.encode(urlCounter);
 
         // step 3 call VT service to scan url and get a Verdict of it
-        Mono<FinalVerdict.Verdict> verdict = virusTotalService.scanUrl(longUrl, generatedHash);
+        Mono<Verdict> verdict = virusTotalService.scanUrl(longUrl, generatedHash);
 
         // step 4 save into db
         save(Links.builder()
