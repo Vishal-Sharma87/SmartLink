@@ -44,16 +44,17 @@ public class JwtFilter extends OncePerRequestFilter {
 
             String subject = jwtService.getSubjectFromJwtToken(jwtToken);
 
-
             if (subject != null && SecurityContextHolder.getContext().getAuthentication() == null) {
                 UserDetails userDetails = userDetailsService.loadUserByUsername(subject);
-                UsernamePasswordAuthenticationToken auth = new UsernamePasswordAuthenticationToken(userDetails, null, null);
+                // propagate authorities so role checks (e.g., hasRole("USER")) work
+                UsernamePasswordAuthenticationToken auth = new UsernamePasswordAuthenticationToken(userDetails, null, userDetails.getAuthorities());
                 auth.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
 
                 SecurityContextHolder.getContext().setAuthentication(auth);
-
-                filterChain.doFilter(request, response);
             }
+
+            // Continue the filter chain in all cases
+            filterChain.doFilter(request, response);
         } catch (Exception e) {
             handlerExceptionResolver.resolveException(request, response, null, e);
         }
