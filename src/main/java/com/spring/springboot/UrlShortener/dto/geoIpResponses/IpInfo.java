@@ -5,20 +5,19 @@ import lombok.Data;
 
 @Data
 public class IpInfo {
-    // Basic IP and Version Info
+
     @JsonProperty("ip")
     private String ip;
 
-    // Geographical Location Details
-    @JsonProperty("city")
-    private String city;
+    @JsonProperty("country_code")
+    private String countryCode;
 
-    @JsonProperty("region")
-    private String region;
+    @JsonProperty("country")
+    private String country;
 
-    @JsonProperty("country_name")
-    private String countryName;
+    @JsonProperty("continent_code")
+    private String continentCode;
 
-    @JsonProperty("postal")
-    private String postal;
+    @JsonProperty("continent")
+    private String continent;
 }
