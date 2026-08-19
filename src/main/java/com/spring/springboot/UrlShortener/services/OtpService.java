@@ -30,6 +30,11 @@ public class OtpService {
 
         stringRedisTemplate.opsForValue().set(email, hashedOtp, 10, TimeUnit.MINUTES);
 
+//        TODO
+//         My SendGrid triel has expired so I can't send Emails,
+//         so to just view the OTP for testing and confirm logic is working I have logged OTP here
+//         make sure to Integrate SendGrid Api before interview
+
         log.info("OTP for email: {} is {}", email, generatedOtp);
     }
 
