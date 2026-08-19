@@ -29,16 +29,25 @@ public class KafkaConfig {
     @Value("${spring.kafka.properties.sasl.jaas.config}")
     private String saslJaasConfig;
 
+    @Value("${spring.kafka.properties.security.protocol}")
+    private String securityProtocol;
+
+    @Value("${spring.kafka.properties.sasl.mechanism}")
+    private String saslMechanism;
+
+    @Value("${spring.kafka.properties.session.timeout.ms}")
+    private int sessionTimeoutMs;
+
     // Common producer properties
     private Map<String, Object> getCommonProducerProps() {
         Map<String, Object> props = new HashMap<>();
         props.put(ProducerConfig.BOOTSTRAP_SERVERS_CONFIG, bootstrapServers);
         props.put(ProducerConfig.KEY_SERIALIZER_CLASS_CONFIG, "org.apache.kafka.common.serialization.StringSerializer");
         props.put(ProducerConfig.VALUE_SERIALIZER_CLASS_CONFIG, "org.springframework.kafka.support.serializer.JsonSerializer");
-        props.put("security.protocol", "SASL_SSL");
-        props.put("sasl.mechanism", "PLAIN");
+        props.put("security.protocol", securityProtocol);
+        props.put("sasl.mechanism", saslMechanism);
         props.put("sasl.jaas.config", saslJaasConfig);
-        props.put("session.timeout.ms", 45000);
+        props.put("session.timeout.ms", sessionTimeoutMs);
         return props;
     }
 
@@ -76,10 +85,10 @@ public class KafkaConfig {
         props.put(JsonDeserializer.VALUE_DEFAULT_TYPE, LinkCreationDto.class);
 
         // SASL/SSL properties
-        props.put("security.protocol", "SASL_SSL");
-        props.put("sasl.mechanism", "PLAIN");
+        props.put("security.protocol", securityProtocol);
+        props.put("sasl.mechanism", saslMechanism);
         props.put("sasl.jaas.config", saslJaasConfig);
-        props.put("session.timeout.ms", 45000);
+        props.put("session.timeout.ms", sessionTimeoutMs);
 
         return new DefaultKafkaConsumerFactory<>(props);
     }
@@ -97,10 +106,10 @@ public class KafkaConfig {
             props.put(JsonDeserializer.VALUE_DEFAULT_TYPE, LinkAnalysisDto.class);
 
             // SASL/SSL properties
-            props.put("security.protocol", "SASL_SSL");
-            props.put("sasl.mechanism", "PLAIN");
+            props.put("security.protocol", securityProtocol);
+            props.put("sasl.mechanism", saslMechanism);
             props.put("sasl.jaas.config", saslJaasConfig);
-            props.put("session.timeout.ms", 45000);
+            props.put("session.timeout.ms", sessionTimeoutMs);
 
             return new DefaultKafkaConsumerFactory<>(props);
     }
