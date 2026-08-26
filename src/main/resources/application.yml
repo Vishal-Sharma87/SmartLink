@@ -1,44 +1,44 @@
 spring:
+  application:
+    name: SmartLink
+
   config:
     import: "optional:file:.env[.properties]"
+
   data:
     mongodb:
-      uri: ${MONGODB_URI:mongodb://localhost:27017/urlshortener}
+      uri: ${MONGODB_URI}
       auto-index-creation: true
 
     redis:
-      host: ${REDIS_HOST:localhost}
-      port: ${REDIS_PORT:6379}
+      host: ${REDIS_HOST}
+      port: ${REDIS_PORT}
 
   link-creation:
-    company-domain: "${COMPANY_DOMAIN:}"
-    company-endpoint: "${COMPANY_ENDPOINT:}"
+    company-endpoint: ${COMPANY_ENDPOINT}
 
   kafka:
-    bootstrap-servers: ${KAFKA_BOOTSTRAP_SERVERS:localhost:9092}
+    bootstrap-servers: ${KAFKA_BOOTSTRAP_SERVERS}
 
     properties:
-      security.protocol: ${KAFKA_SECURITY_PROTOCOL:PLAINTEXT}
-      sasl.mechanism: ${KAFKA_SASL_MECHANISM:PLAIN}
-      sasl.jaas.config: ${KAFKA_JAAS_CONFIG:}
-      session.timeout.ms: ${KAFKA_SESSION_TIMEOUT:45000}
+      security.protocol: ${KAFKA_SECURITY_PROTOCOL}
+      sasl.mechanism: ${KAFKA_SASL_MECHANISM}
+      sasl.jaas.config: ${KAFKA_JAAS_CONFIG}
+      session.timeout.ms: ${KAFKA_SESSION_TIMEOUT}
 
     producer:
-      key-serializer: ${KAFKA_KEY_SERIALIZER:org.apache.kafka.common.serialization.StringSerializer}
-      value-serializer: ${KAFKA_VALUE_SERIALIZER:org.springframework.kafka.support.serializer.JsonSerializer}
+      key-serializer: ${KAFKA_KEY_SERIALIZER}
+      value-serializer: ${KAFKA_VALUE_SERIALIZER}
       properties:
         spring.json.add.type.headers: false
 
     consumer:
-      group-id: ${KAFKA_CONSUMER_GROUP_ID:url-shortener-group}
-      key-deserializer: ${KAFKA_KEY_DESERIALIZER:org.apache.kafka.common.serialization.StringDeserializer}
-      value-deserializer: ${KAFKA_VALUE_DESERIALIZER:org.springframework.kafka.support.serializer.JsonDeserializer}
+      group-id: ${KAFKA_CONSUMER_GROUP_ID}
+      key-deserializer: ${KAFKA_KEY_DESERIALIZER}
+      value-deserializer: ${KAFKA_VALUE_DESERIALIZER}
       properties:
-        spring.json.trusted.packages: com.spring.springboot.UrlShortener.model
+        spring.json.trusted.packages: com.spring.springboot.smartlink.model
         spring.json.use.type.headers: false
-
-client:
-  id: ${CLIENT_ID}
 
 virustotal:
   api-key: ${VT_API_KEY}
@@ -48,13 +48,13 @@ sendgrid:
   api_key: ${SENDGRID_API_KEY}
   verified:
     senders:
-      email: ${SENDGRID_EMAIL} #the email which is verified on sendgrid and will be used as "from" email
+      email: ${SENDGRID_EMAIL}
 
 ipinfo:
   token: ${IP_INFO_TOKEN}
+
 jwt:
   secretKey: ${JWT_SECRET_KEY}
-
 
 logging:
   level:
