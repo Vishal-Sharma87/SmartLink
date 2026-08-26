@@ -9,10 +9,10 @@
         <relativePath/> <!-- lookup parent from repository -->
     </parent>
     <groupId>com.spring.springboot</groupId>
-    <artifactId>UrlShortener</artifactId>
+    <artifactId>smartlink</artifactId>
     <version>0.0.1-SNAPSHOT</version>
-    <name>UrlShortener</name>
-    <description>url shortener that follows industry standards</description>
+    <name>SmartLink</name>
+    <description>SmartLink URL shortener that follows industry standards</description>
     <url/>
     <licenses>
         <license/>
