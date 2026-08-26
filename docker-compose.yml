@@ -1,36 +1,36 @@
 services:
   mongodb:
-    image: mongo:${MONGODB_IMAGE_TAG:-7.0}
-    container_name: url-sortener-mongodb
+    image: mongo:${MONGODB_IMAGE_TAG}
+    container_name: smart-link-mongodb
     restart: unless-stopped
     ports:
-      - "${MONGODB_PORT:-27017}:27017"
+      - "${MONGODB_PORT}:27017"
     environment:
-      MONGO_INITDB_DATABASE: ${MONGODB_DATABASE:-urlshortener}
+      MONGO_INITDB_DATABASE: ${MONGODB_DATABASE}
     volumes:
-      - url-sortener-mongodb-data:/data/db
+      - smartlink_mongodb-data:/data/db
 
   redis:
-    image: redis:${REDIS_IMAGE_TAG:-7.4-alpine}
-    container_name: url-sortener-redis
+    image: redis:${REDIS_IMAGE_TAG}
+    container_name: smart-link-redis
     restart: unless-stopped
     ports:
-      - "${REDIS_PORT:-6379}:6379"
+      - "${REDIS_PORT}:6379"
     volumes:
-      - url-sortener-redis-data:/data
+      - smartlink_redis-data:/data
 
   kafka:
-    image: apache/kafka:${KAFKA_IMAGE_TAG:-3.9.0}
-    container_name: url-sortener-kafka
+    image: apache/kafka:${KAFKA_IMAGE_TAG}
+    container_name: smart-link-kafka
     restart: unless-stopped
     ports:
-      - "${KAFKA_PORT:-9092}:9092"
+      - "${KAFKA_PORT}:9092"
     environment:
       KAFKA_CLUSTER_ID: 619f0c47-8d45-444a-90f0-a6360586a97b
       KAFKA_NODE_ID: 1
       KAFKA_PROCESS_ROLES: broker,controller
       KAFKA_LISTENERS: PLAINTEXT://:9092,CONTROLLER://:9093
-      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://${KAFKA_ADVERTISED_HOST:-localhost}:${KAFKA_PORT:-9092}
+      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://${KAFKA_ADVERTISED_HOST}:${KAFKA_PORT}
       KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: CONTROLLER:PLAINTEXT,PLAINTEXT:PLAINTEXT
 
       KAFKA_CONTROLLER_LISTENER_NAMES: CONTROLLER
@@ -40,9 +40,9 @@ services:
       KAFKA_TRANSACTION_STATE_LOG_MIN_ISR: 1
       KAFKA_GROUP_INITIAL_REBALANCE_DELAY_MS: 0
     volumes:
-      - url-sortener-kafka-data:/var/lib/kafka/data
+      - smartlink_kafka-data:/var/lib/kafka/data
 
 volumes:
-  url-sortener-mongodb-data:
-  url-sortener-redis-data:
-  url-sortener-kafka-data:
+  smartlink_mongodb-data:
+  smartlink_redis-data:
+  smartlink_kafka-data:
