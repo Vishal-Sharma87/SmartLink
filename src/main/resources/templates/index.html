@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+
+<head th:replace="~{fragments/head :: head('SmartLink — Shorten. Share. Track.')}"></head>
+
+<body>
+    <div th:replace="~{fragments/navbar :: navbar}"></div>
+    <main>
+        <section class="hero container">
+            <div class="hero-copy">
+                <span class="eyebrow">SECURE LINK MANAGEMENT</span>
+                <h1>Shorten. Share.<br><span class="text-primary">Track.</span></h1>
+                <p class="hero-text">SmartLink makes it simple to create, manage, and understand your link — with safety
+                    checks that help protect every click.</p>
+                <div class="hero-actions">
+                    <a class="button button-primary" th:href="@{/auth?mode=signup}">Get started <span>→</span></a>
+                    <a class="button button-secondary" th:href="@{/auth}">Login</a>
+                </div>
+                <div class="trust-row"><span class="trust-dot"></span> Built for safer sharing and smarter decisions
+                </div>
+            </div>
+            <div class="product-preview" aria-label="SmartLink dashboard preview">
+                <div class="preview-top"><span class="window-dots"><i></i><i></i><i></i></span><span>smartlink /
+                        dashboard</span></div>
+                <div class="preview-body">
+                    <div class="preview-sidebar"><strong>SmartLink</strong><span class="active">Dashboard</span><span>My
+                            link</span><span>Reports</span></div>
+                    <div class="preview-main">
+                        <div class="preview-heading"><span><b>Good morning</b><small>Your link at a
+                                    glance</small></span><em>+ Create link</em></div>
+                        <div class="preview-cards">
+                            <div><small>Total link</small><b>128</b><span>↗ 12% this month</span></div>
+                            <div><small>Total clicks</small><b>24.8k</b><span>↗ 8.4% this month</span></div>
+                        </div>
+                        <div class="preview-table">
+                            <div><span>Original URL</span><span>Status</span><span>Clicks</span></div>
+                            <div><span>docs.smartlink.dev/guide</span><strong>SAFE</strong><span>1,284</span></div>
+                            <div><span>product.example.com/launch</span><strong>SAFE</strong><span>842</span></div>
+                            <div><span>newsletter.example.com</span><strong
+                                    class="preview-warn">REVIEW</strong><span>319</span></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+        <section class="feature-section container">
+            <div class="section-heading"><span class="eyebrow">EVERYTHING YOU NEED</span>
+                <h2>Links that work harder for you.</h2>
+                <p>One focused workspace for sharing, managing, and protecting your link.</p>
+            </div>
+            <div class="feature-grid">
+                <article class="feature-card"><span class="feature-icon purple">↗</span>
+                    <h3>Smart link management</h3>
+                    <p>Create and organize short URLs without the clutter.</p>
+                </article>
+                <article class="feature-card"><span class="feature-icon green">✓</span>
+                    <h3>Security first</h3>
+                    <p>Analyze destinations for potentially malicious URLs before sharing.</p>
+                </article>
+                <article class="feature-card"><span class="feature-icon blue">◌</span>
+                    <h3>Useful analytics</h3>
+                    <p>Understand clicks and basic audience context for every link.</p>
+                </article>
+                <article class="feature-card"><span class="feature-icon orange">!</span>
+                    <h3>Community safety</h3>
+                    <p>Report suspicious or abusive destinations with a verified report.</p>
+                </article>
+            </div>
+        </section>
+    </main>
+    <div th:replace="~{fragments/footer :: footer}"></div>
+    <script th:src="@{/js/site.js}"></script>
+</body>
+
+</html>
