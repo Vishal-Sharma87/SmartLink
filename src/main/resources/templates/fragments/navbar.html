@@ -1,0 +1,22 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<body>
+<nav class="site-nav" th:fragment="navbar">
+    <div class="container nav-inner">
+        <a class="brand" th:href="@{/}"><span class="brand-mark">S</span><span>SmartLink</span></a>
+        <div class="nav-links" id="navLinks">
+            <a th:href="@{/dashboard}" data-auth-link>Dashboard</a>
+            <a th:href="@{/about}">Behind SmartLink</a>
+            <a th:href="@{/report-abuse-page}">Report abuse</a>
+        </div>
+        <div class="nav-actions">
+            <span class="nav-user" data-user-label></span>
+            <a class="button button-ghost button-small" th:href="@{/auth}" data-guest-link>Login</a>
+            <button class="button button-ghost button-small hidden" type="button" data-logout>Log out</button>
+            <a class="button button-primary button-small" th:href="@{/auth?mode=signup}" data-guest-link>Get started</a>
+        </div>
+        <button class="menu-toggle" type="button" aria-label="Open navigation" data-menu-toggle>☰</button>
+    </div>
+</nav>
+</body>
+</html>
