@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+
+<head th:replace="~{fragments/head :: head('SmartLink — Report abuse')}"></head>
+
+<body class="app-page">
+    <div th:replace="~{fragments/navbar :: navbar}"></div>
+    <main class="container narrow-main">
+        <div class="page-header compact">
+            <div><span class="eyebrow">COMMUNITY SAFETY</span>
+                <h1>Report a suspicious link</h1>
+                <p>Help keep SmartLink safe by sharing a concern about a destination.</p>
+            </div>
+        </div>
+        <section class="report-card card" data-report-app>
+            <div class="stepper"><span class="step active" data-step-indicator="1"><b>1</b><span>Report
+                        details</span></span><i></i><span class="step" data-step-indicator="2"><b>2</b><span>Verify
+                        email</span></span></div>
+            <div class="alert hidden" data-report-alert role="alert"></div>
+            <form class="form-stack" data-report-form>
+                <div class="report-step" data-report-step="1"><label>Short URL<input name="linkToReport" type="url"
+                            required placeholder="https://your-domain/abc123"></label>
+                    <div class="form-two"><label>Your name<input name="reporterName" required
+                                placeholder="Your name"></label><label>Email address<input name="reporterEmail"
+                                type="email" required placeholder="you@example.com"></label></div>
+                    <fieldset class="cause-fieldset">
+                        <legend>Why are you reporting this link?</legend><span class="field-hint">Select all that
+                            apply.</span>
+                        <div class="cause-options"><label th:each="reportCause : ${reportCauses}"><input type="checkbox"
+                                    name="cause" th:value="${reportCause.name()}"><span
+                                    th:text="${#strings.replace(reportCause.name(), '_', ' ')}">PHISHING</span></label>
+                        </div>
+                    </fieldset><label>Additional context <span class="optional">Optional</span><textarea
+                            name="description" rows="4"
+                            placeholder="Tell us what happened..."></textarea></label><button
+                        class="button button-primary button-wide" type="button" data-continue-report>Continue to
+                        verification <span>→</span></button>
+                </div>
+                <div class="report-step hidden" data-report-step="2">
+                    <div class="verification-note"><span class="feature-icon green">✓</span>
+                        <div><strong>Verification code sent.</strong>
+                            <p>Enter the code sent to your email to submit the report.</p>
+                        </div>
+                    </div><label>One-time verification code<input name="otp" inputmode="numeric" required
+                            placeholder="4 digits"></label><button class="button button-primary button-wide"
+                        type="submit" data-submit>Verify & submit report <span>→</span></button><button
+                        class="text-button" type="button" data-back-report>← Back to report details</button>
+                </div>
+            </form>
+            <div class="success-state hidden" data-report-success><span class="success-check">✓</span>
+                <h2>Report submitted successfully.</h2>
+                <p>We’ve accepted your report and will process it as soon as possible.</p><a
+                    class="button button-secondary" th:href="@{/}">Return home</a>
+            </div>
+        </section>
+    </main>
+    <div th:replace="~{fragments/footer :: footer}"></div>
+    <script th:src="@{/js/site.js}"></script>
+    <script th:src="@{/js/report-abuse.js}"></script>
+</body>
+
+</html>
