@@ -1,0 +1,15 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<body>
+<aside class="app-sidebar" th:fragment="sidebar(active)">
+    <p class="sidebar-label">WORKSPACE</p>
+    <nav class="sidebar-nav" aria-label="Workspace navigation">
+        <a th:classappend="${active == 'dashboard'} ? ' active' : ''" th:href="@{/dashboard}"><span>⌂</span> Overview</a>
+        <a th:classappend="${active == 'link'} ? ' active' : ''" href="#link"><span>↗</span> Links</a>
+        <a th:classappend="${active == 'analytics'} ? ' active' : ''" th:href="@{/analytics}"><span>◌</span> Analytics</a>
+        <a th:href="@{/report-abuse-page}"><span>!</span> Report abuse</a>
+    </nav>
+    <div class="sidebar-note"><strong>Safety first</strong><span>Every destination is checked before sharing.</span></div>
+</aside>
+</body>
+</html>
