@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments/head :: head('SmartLink — Behind SmartLink')}"></head>
+<body>
+<div th:replace="~{fragments/navbar :: navbar}"></div>
+<main class="about-page">
+    <section class="about-hero container">
+        <div class="about-hero-copy">
+            <span class="eyebrow">BEHIND SMARTLINK</span>
+            <h1>Built by Vishal.</h1>
+            <p class="about-lede">A backend-focused developer interested in building reliable backend systems and understanding how systems behave under real-world constraints.</p>        </div>
+        <div class="about-signature card"><span class="brand-mark about-mark">S</span><div><strong>SmartLink</strong><p>A familiar problem used to explore the decisions behind a secure, observable, maintainable system.</p></div></div>
+    </section>
+
+    <section class="about-section container about-link-section" aria-labelledby="connect-heading">
+        <div class="section-heading about-heading"><span class="eyebrow">CONNECT</span><h2 id="connect-heading">Find the work behind the project.</h2><p>Source code, professional profile, problem solving, background, or a direct note.</p></div>
+        <div class="developer-link">
+            <a class="developer-link-card" href="https://github.com/Vishal-Sharma87" target="_blank" rel="noopener noreferrer"><span class="developer-link-icon purple">⌘</span><span><strong>GitHub</strong><small>View source and projects</small></span><b>↗</b></a>
+            <a class="developer-link-card" href="https://www.linkedin.com/in/vishal-sharma87/" target="_blank" rel="noopener noreferrer"><span class="developer-link-icon blue">in</span><span><strong>LinkedIn</strong><small>Connect professionally</small></span><b>↗</b></a>
+            <a class="developer-link-card" href="https://leetcode.com/u/Vishal-Sharma87/" target="_blank" rel="noopener noreferrer"><span class="developer-link-icon orange">&lt;/&gt;</span><span><strong>LeetCode</strong><small>Explore my DSA and problem-solving profile</small></span><b>↗</b></a>
+            <a class="developer-link-card" href="https://drive.google.com/file/d/13Pn_4QcrVwQCRNow-zYevOxDbIBmGanD/view" target="_blank" rel="noopener noreferrer"><span class="developer-link-icon green">▤</span><span><strong>Resume</strong><small>View my resume</small></span><b>↗</b></a>
+            <a class="developer-link-card" href="mailto:vishal.sharma.dev.87@gmail.com"><span class="developer-link-icon purple">@</span><span><strong>Email</strong><small>Get in touch</small></span><b>→</b></a>
+        </div>
+    </section>
+
+    <section class="about-section container about-story-grid">
+        <article class="about-story-card card"><span class="eyebrow">WHY I BUILT IT</span><h2>A short link became a backend exploration.</h2><p>SmartLink started as a URL-shortening project, but evolved into an exploration of backend engineering concepts such as security, asynchronous processing, caching, link safety, analytics, and system reliability.</p></article>
+        <article class="about-philosophy card"><span class="quote-mark">“</span><blockquote>The goal was not just to make a URL shortener work, but to use a familiar problem to explore the engineering decisions behind a system that needs to remain secure, observable, and maintainable.</blockquote></article>
+    </section>
+
+    <section class="about-section container" id="engineering" aria-labelledby="engineering-heading">
+        <div class="section-heading about-heading"><span class="eyebrow">ENGINEERING BEHIND SMARTLINK</span><h2 id="engineering-heading">The project, in capabilities.</h2><p>Each part reflects something implemented in the existing application.</p></div>
+        <div class="engineering-grid">
+            <article class="engineering-card"><span class="feature-icon purple">↗</span><h3>URL shortening</h3><p>Compact Base62 short codes are generated and resolved through the application’s redirect flow.</p></article>
+            <article class="engineering-card"><span class="feature-icon orange">!</span><h3>Link safety</h3><p>Destinations move through the existing verdict system: SAFE, SUSPICIOUS, PENDING_REVERIFICATION, UNVERIFIED, or MALICIOUS.</p></article>
+            <article class="engineering-card"><span class="feature-icon blue">◌</span><h3>Analytics</h3><p>Click activity is modeled with browser, device, operating system, country, continent, time zone, and click time.</p></article>
+            <article class="engineering-card"><span class="feature-icon green">✓</span><h3>Authentication</h3><p>JWT-based authentication protects user operations, with a server-side signup session bridging email OTP verification.</p></article>
+            <article class="engineering-card"><span class="feature-icon purple">◆</span><h3>Asynchronous workflows</h3><p>Kafka is used for queued link creation and click-analysis processing so those workflows can run independently.</p></article>
+            <article class="engineering-card"><span class="feature-icon blue">▣</span><h3>Backend architecture</h3><p>Spring Boot controllers, services, repositories, MongoDB, Redis, Thymeleaf, and external safety/geolocation integrations work together.</p></article>
+        </div>
+    </section>
+
+    <section class="about-section container lessons-section" aria-labelledby="lessons-heading">
+        <div class="lessons-card card"><div><span class="eyebrow">WHAT I LEARNED</span><h2 id="lessons-heading">The details shape the system.</h2></div><ul><li>Designing APIs and data models before building the UI.</li><li>Keeping routing, authentication, and authorization explicit.</li><li>Separating responsibilities between controllers, services, and repositories.</li><li>Designing for asynchronous workflows and failure cases.</li><li>Turning raw analytics events into useful summaries.</li></ul></div>
+    </section>
+</main>
+<div th:replace="~{fragments/footer :: footer}"></div>
+<script th:src="@{/js/site.js}"></script>
+</body>
+</html>
