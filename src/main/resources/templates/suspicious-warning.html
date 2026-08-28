@@ -1,30 +1,31 @@
 <!DOCTYPE html>
 <html xmlns:th="http://www.w3.org/1999/xhtml">
+
 <head>
-    <title>Suspicious Link Warning</title>
+    <title>SmartLink — Review destination</title>
+    <link rel="stylesheet" href="/css/style.css" />
 </head>
-<body style="font-family:sans-serif;text-align:center;margin-top:100px;">
 
-<h2>This link looks suspicious</h2>
-<p>The link you’re trying to visit may be unsafe or unverified.</p>
-<p><strong>URL:</strong> <span th:text="${longUrl}"></span></p>
+<body class="auth-page">
+    <div class="auth-shell">
+        <div class="auth-card centered warning-card">
+            <span class="feature-icon orange warning-icon">!</span>
+            <h2>Review this destination</h2>
+            <p class="warning-copy">This link looks suspicious or has not been fully verified. Continue only if you
+                recognize and trust the destination.</p>
+            <div class="detail-item"><small>Destination URL</small><strong th:text="${longUrl}"></strong></div>
+            <button class="button button-primary button-wide" id="proceedBtn">Proceed anyway</button>
+            <a class="button button-ghost button-wide" href="/">Go back</a>
+        </div>
+    </div>
 
-<button
-        id="proceedBtn"
-        style="padding:10px 20px;background-color:orange;border:none;color:white;">
-    Proceed Anyway
-</button>
-
-<br/>
-<a href="/" style="color:red;">Go Back</a>
-
-<script th:inline="javascript">
-    const shortCode = /*[[${shortCode}]]*/ '';
-    document.getElementById("proceedBtn").addEventListener("click", () => {
-        window.location.href = `/api/confirm/${shortCode}`;
-    });
-</script>
+    <script th:inline="javascript">
+        const shortCode = /*[[${shortCode}]]*/ '';
+        document.getElementById("proceedBtn").addEventListener("click", () => {
+            window.location.href = `/api/confirm/${shortCode}`;
+        });
+    </script>
 
 </body>
-</html>
 
+</html>

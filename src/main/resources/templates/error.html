@@ -1,73 +1,24 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
-    <title>Link Not Found</title>
+    <title>SmartLink — Link not found</title>
     <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 
-    <style>
-        body {
-            font-family: Arial, sans-serif;
-            background: #f9fafb;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            height: 100vh;
-        }
-
-        .card {
-            background: #ffffff;
-            padding: 30px 40px;
-            border-radius: 10px;
-            box-shadow: 0 10px 25px rgba(0,0,0,0.08);
-            max-width: 420px;
-            text-align: center;
-        }
-
-        h1 {
-            font-size: 64px;
-            margin: 0;
-            color: #ef4444;
-        }
-
-        h2 {
-            margin-top: 10px;
-            color: #111827;
-        }
-
-        p {
-            color: #6b7280;
-            margin-top: 12px;
-            line-height: 1.6;
-        }
-
-        a {
-            display: inline-block;
-            margin-top: 20px;
-            padding: 12px 24px;
-            background: #2563eb;
-            color: #ffffff;
-            text-decoration: none;
-            border-radius: 6px;
-            font-weight: bold;
-        }
-
-        a:hover {
-            background: #1d4ed8;
-        }
-    </style>
+    <link rel="stylesheet" href="/css/style.css" />
 </head>
-<body>
 
-<div class="card">
-    <h1>404</h1>
-    <h2>Link Not Found</h2>
-    <p>
-        The short link you are trying to access does not exist,
-        has expired, or may be malformed.
-    </p>
-    <a href="/">Go to Home</a>
-</div>
-
+<body class="auth-page">
+    <div class="auth-shell">
+        <div class="auth-card centered error-card">
+            <span class="eyebrow">SMARTLINK</span>
+            <h1 class="error-code">404</h1>
+            <h2>Link not found</h2>
+            <p>This short link does not exist, has expired, or may be malformed.</p>
+            <a class="button button-primary" href="/">Return home</a>
+        </div>
+    </div>
 </body>
+
 </html>

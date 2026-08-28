@@ -1,9 +1,22 @@
 <!DOCTYPE html>
 <html xmlns:th="http://www.w3.org/1999/xhtml">
-<head><title>Malicious Link Blocked</title></head>
-<body style="font-family:sans-serif;text-align:center;margin-top:100px;">
-<h2>Access Blocked</h2>
-<p th:text="${message}"></p>
-<a href="/" style="color:red;">Return Home</a>
+
+<head>
+    <title>SmartLink — Destination blocked</title>
+    <link rel="stylesheet" href="/css/style.css" />
+</head>
+
+<body class="auth-page">
+    <div class="auth-shell">
+        <div class="auth-card centered warning-card">
+            <span class="feature-icon orange warning-icon">!</span>
+            <h2>Destination blocked</h2>
+            <p class="warning-copy">This URL was blocked because it was confirmed to be malicious. For your safety,
+                SmartLink will not redirect you.</p>
+            <p class="alert error">SmartLink blocked this destination for your safety.</p><a
+                class="button button-secondary" href="/">Return home</a>
+        </div>
+    </div>
 </body>
+
 </html>

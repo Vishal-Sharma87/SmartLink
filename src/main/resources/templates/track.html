@@ -1,75 +1,71 @@
 <!DOCTYPE html>
 <html lang="en" xmlns:th="http://www.thymeleaf.org">
+
 <head>
-    <title>Redirecting...</title>
+    <title>SmartLink — Redirecting</title>
     <meta charset="UTF-8">
 
     <!-- Prevent caching of redirect page -->
-    <meta http-equiv="Cache-Control" content="no-store, no-cache, must-revalidate"/>
-    <meta http-equiv="Pragma" content="no-cache"/>
-    <meta http-equiv="Expires" content="0"/>
+    <meta http-equiv="Cache-Control" content="no-store, no-cache, must-revalidate" />
+    <meta http-equiv="Pragma" content="no-cache" />
+    <meta http-equiv="Expires" content="0" />
 
-    <style>
-        body {
-            font-family: Arial, sans-serif;
-            text-align: center;
-            padding-top: 60px;
-            background-color: #fafafa;
-        }
-        p {
-            font-size: 16px;
-            color: #333;
-        }
-    </style>
+    <link rel="stylesheet" href="/css/style.css" />
 </head>
 
-<body>
+<body class="auth-page">
+    <div class="auth-shell">
+        <div class="auth-card centered">
+            <span class="brand-mark warning-icon">S</span>
+            <h2>Taking you there…</h2>
+            <p class="warning-copy">We’re recording this click and checking the destination.</p>
+        </div>
+    </div>
 
-<p>Redirecting, please wait...</p>
+    <!-- Thymeleaf JavaScript inline ENABLED -->
+    <script th:inline="javascript">
+        (function () {
 
-<!-- Thymeleaf JavaScript inline ENABLED -->
-<script th:inline="javascript">
-    (function () {
+            /* Thymeleaf injected values */
+            const shortHash = /*[[${shortCode}]]*/ '';
+            const longUrl = /*[[${longUrl}]]*/ '';
 
-        /* Thymeleaf injected values */
-        const shortHash = /*[[${shortCode}]]*/ '';
-        const longUrl = /*[[${longUrl}]]*/ '';
+            /* Safety check */
+            if (!longUrl) {
+                console.error("Redirect failed: longUrl is empty");
+                return;
+            }
 
-        /* Safety check */
-        if (!longUrl) {
-            console.error("Redirect failed: longUrl is empty");
-            return;
-        }
+            /* Tracking payload */
+            const payload = {
+                shortHash: shortHash,
 
-        /* Tracking payload */
-        const payload = {
-            shortHash: shortHash,
+                screenWidth: window.screen.width,
 
-            screenWidth: window.screen.width,
+                viewportWidth: window.innerWidth,
 
-            viewportWidth: window.innerWidth,
+                userAgent: navigator.userAgent,
+                timezone: Intl.DateTimeFormat().resolvedOptions().timeZone
+            };
 
-            userAgent: navigator.userAgent,
-            timezone: Intl.DateTimeFormat().resolvedOptions().timeZone
-        };
+            /* Fire-and-forget tracking */
+            fetch("/api/track", {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json"
+                },
+                body: JSON.stringify(payload),
+                keepalive: true
+            })
+                .catch(err => console.error("Tracking failed", err))
+                .finally(() => {
+                    /* Guaranteed redirect */
+                    window.location.replace(longUrl);
+                });
 
-        /* Fire-and-forget tracking */
-        fetch("/api/track", {
-            method: "POST",
-            headers: {
-                "Content-Type": "application/json"
-            },
-            body: JSON.stringify(payload),
-            keepalive: true
-        })
-        .catch(err => console.error("Tracking failed", err))
-        .finally(() => {
-            /* Guaranteed redirect */
-            window.location.replace(longUrl);
-        });
-
-    })();
-</script>
+        })();
+    </script>
 
 </body>
+
 </html>

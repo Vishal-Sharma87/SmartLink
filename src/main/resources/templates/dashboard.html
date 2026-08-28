@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+
+<head th:replace="~{fragments/head :: head('SmartLink — Dashboard')}"></head>
+
+<body class="app-page">
+    <div th:replace="~{fragments/navbar :: navbar}"></div>
+    <div class="app-layout container">
+        <div th:replace="~{fragments/sidebar :: sidebar('dashboard')}"></div>
+        <main class="app-main" data-dashboard>
+            <div class="page-header">
+                <div><span class="eyebrow">OVERVIEW</span>
+                    <h1>Good to see you, <span data-dashboard-user>there</span>.</h1>
+                    <p>Manage your link and keep an eye on how they perform.</p>
+                </div><a class="button button-secondary" th:href="@{/analytics}">View analytics <span>→</span></a>
+            </div>
+            <div class="alert hidden" data-dashboard-alert role="alert"></div>
+            <section class="metrics-grid">
+                <article class="metric-card"><span class="metric-label">Total link</span><strong
+                        data-total-links>—</strong><small>All link in your workspace</small></article>
+                <article class="metric-card"><span class="metric-label">Safe link</span><strong
+                        data-safe-links>—</strong><small>Currently marked safe</small></article>
+                <article class="metric-card"><span class="metric-label">Needs review</span><strong
+                        data-review-links>—</strong><small>Suspicious or pending</small></article>
+                <article class="metric-card"><span class="metric-label">Total clicks</span><strong
+                        data-total-clicks>—</strong><small>Across available link</small></article>
+            </section>
+            <section class="create-card card">
+                <div><span class="eyebrow">CREATE A SHORT LINK</span>
+                    <h2>Share something worth clicking.</h2>
+                    <p>Paste a long URL and SmartLink will create a trackable, safety-checked short link.</p>
+                </div>
+                <form class="create-form" data-create-form><input name="actualUrl" type="url" required
+                        placeholder="https://example.com/your-long-url"><button class="button button-primary"
+                        type="submit" data-submit>Shorten URL <span>→</span></button></form>
+                <div class="result-box hidden" data-create-result>
+                    <div><span class="result-label">Your short link</span><a href="#" target="_blank" rel="noopener"
+                            data-created-url></a></div><button class="button button-secondary button-small"
+                        type="button" data-copy-created>Copy</button>
+                </div>
+            </section>
+            <section class="link-section card" id="link">
+                <div class="section-row">
+                    <div>
+                        <h2>Your link</h2>
+                        <p class="section-subtitle">Your latest short link and their current safety status.</p>
+                    </div><button class="button button-ghost button-small" type="button" data-refresh-links>↻
+                        Refresh</button>
+                </div>
+                <div class="empty-state hidden" data-links-empty><span class="empty-icon">↗</span>
+                    <h3>No link yet</h3>
+                    <p>Create your first short link above and it will appear here.</p>
+                </div>
+                <div class="table-wrap">
+                    <table class="link-table">
+                        <thead>
+                            <tr>
+                                <th>Original URL</th>
+                                <th>Short link</th>
+                                <th>Status</th>
+                                <th>Clicks</th>
+                                <th>Created</th>
+                                <th></th>
+                            </tr>
+                        </thead>
+                        <tbody data-links-body></tbody>
+                    </table>
+                </div>
+            </section>
+            <section class="card detail-panel hidden" data-detail-panel>
+                <div class="section-row">
+                    <div><span class="eyebrow">LINK DETAILS</span>
+                        <h2 data-detail-title>Link details</h2>
+                    </div><button class="icon-button" type="button" data-close-detail
+                        aria-label="Close details">×</button>
+                </div>
+                <div class="detail-grid" data-detail-content></div>
+            </section>
+        </main>
+    </div>
+    <script th:src="@{/js/site.js}"></script>
+    <script th:src="@{/js/dashboard.js}"></script>
+</body>
+
+</html>
