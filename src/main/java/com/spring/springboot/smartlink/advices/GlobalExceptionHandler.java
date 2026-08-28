@@ -56,6 +56,11 @@ public class GlobalExceptionHandler {
         return new ResponseEntity<>(error, HttpStatus.CONFLICT);
     }
 
+    @ExceptionHandler(RedirectionHashInvalidException.class)
+    public String handleRedirectionHashInvalidException(RedirectionHashInvalidException ex) {
+        return "error";
+    }
+
     @ExceptionHandler(InvalidOTPException.class)
     public ResponseEntity<ApiError> handleInvalidOtpException(InvalidOTPException ex) {
         log.warn("Request rejected because OTP validation failed");
