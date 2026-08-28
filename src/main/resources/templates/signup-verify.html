@@ -1,0 +1,28 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+
+<head th:replace="~{fragments/head :: head('SmartLink — Verify your email')}"></head>
+
+<body class="auth-page">
+    <div th:replace="~{fragments/navbar :: navbar}"></div>
+    <main class="auth-shell">
+        <section class="auth-card">
+            <div class="auth-intro"><span class="eyebrow">STEP 2 OF 2 · VERIFY EMAIL</span>
+                <h1>Verify your email</h1>
+                <p>We’ve sent a four-digit verification code to:</p><strong class="verification-email"
+                    th:text="${pendingEmail}" data-signup-email>user@example.com</strong>
+            </div>
+            <div class="alert hidden" data-signup-verify-alert role="alert"></div>
+            <form class="form-stack" data-signup-verify-form><label>Verification code<input name="otp"
+                        inputmode="numeric" autocomplete="one-time-code" pattern="[0-9]{4}" maxlength="4" required
+                        placeholder="Enter 4 digits"></label><button class="button button-primary button-wide"
+                    type="submit" data-submit>Verify email <span>→</span></button></form>
+            <button class="text-button button-wide" type="button" data-resend-signup>Didn’t receive a code? Resend
+                OTP</button>
+        </section>
+    </main>
+    <script th:src="@{/js/site.js}"></script>
+    <script th:src="@{/js/signup-verify.js}"></script>
+</body>
+
+</html>
