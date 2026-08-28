@@ -1,0 +1,115 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+
+<head th:replace="~{fragments/head :: head('SmartLink — Analytics')}"></head>
+
+<body class="app-page">
+    <div th:replace="~{fragments/navbar :: navbar}"></div>
+    <div class="app-layout container">
+        <div th:replace="~{fragments/sidebar :: sidebar('analytics')}"></div>
+        <main class="app-main analytics-main" data-analytics>
+            <div class="page-header compact">
+                <div><span class="eyebrow">INSIGHTS</span>
+                    <h1>Link analytics</h1>
+                    <p>See how people interact with your short link.</p>
+                </div><a class="button button-secondary" th:href="@{/dashboard}">← Back to link</a>
+            </div>
+            <div class="alert hidden" data-analytics-alert role="alert"></div>
+            <section class="analytics-picker card"><label for="analytics-link">Choose a link</label><select
+                    id="analytics-link" data-analytics-select>
+                    <option value="">Loading your link…</option>
+                </select></section>
+            <div class="analytics-empty card hidden" data-analytics-empty><span class="empty-icon">◌</span>
+                <h2>No click data available yet</h2>
+                <p>Share a short link and analytics will appear here after its first visit.</p>
+            </div>
+            <div class="hidden" data-analytics-content>
+                <section class="analytics-hero card">
+                    <div><span class="eyebrow">SELECTED LINK</span>
+                        <h2 data-analytics-hash>—</h2>
+                        <p data-analytics-url>—</p>
+                    </div><a class="button button-secondary button-small" data-analytics-open target="_blank"
+                        rel="noopener">Open link ↗</a>
+                </section>
+                <section class="metrics-grid analytics-metrics">
+                    <article class="metric-card"><span class="metric-label">Total clicks</span><strong
+                            data-total-clicks>—</strong><small>Recorded visits</small></article>
+                    <article class="metric-card"><span class="metric-label">Unique countries</span><strong
+                            data-unique-countries>—</strong><small>From available IP data</small></article>
+                    <article class="metric-card"><span class="metric-label">Top country</span><strong
+                            class="metric-text" data-top-country>—</strong><small data-top-country-count>—</small>
+                    </article>
+                </section>
+                <section class="analytics-grid">
+                    <article class="card chart-card">
+                        <div class="section-row">
+                            <div>
+                                <h2>Devices</h2>
+                                <p class="section-subtitle">Form factors used to click.</p>
+                            </div>
+                        </div>
+                        <div class="distribution" data-distribution="devices"></div>
+                    </article>
+                    <article class="card chart-card">
+                        <div class="section-row">
+                            <div>
+                                <h2>Browsers</h2>
+                                <p class="section-subtitle">Browsers detected in clicks.</p>
+                            </div>
+                        </div>
+                        <div class="distribution" data-distribution="browsers"></div>
+                    </article>
+                    <article class="card chart-card">
+                        <div class="section-row">
+                            <div>
+                                <h2>Operating systems</h2>
+                                <p class="section-subtitle">Platforms used to visit.</p>
+                            </div>
+                        </div>
+                        <div class="distribution" data-distribution="operatingSystems"></div>
+                    </article>
+                    <article class="card chart-card">
+                        <div class="section-row">
+                            <div>
+                                <h2>Countries</h2>
+                                <p class="section-subtitle">Where clicks came from.</p>
+                            </div>
+                        </div>
+                        <div class="distribution" data-distribution="countries"></div>
+                    </article>
+                </section>
+                <section class="card recent-clicks">
+                    <div class="section-row">
+                        <div>
+                            <h2>Recent clicks</h2>
+                            <p class="section-subtitle">Technical details are kept to a useful summary.</p>
+                        </div>
+                    </div>
+                    <div class="table-wrap">
+                        <table class="link-table analytics-table">
+                            <thead>
+                                <tr>
+                                    <th>Time</th>
+                                    <th>Country</th>
+                                    <th>Device</th>
+                                    <th>Browser</th>
+                                    <th>OS</th>
+                                    <th>Time zone</th>
+                                </tr>
+                            </thead>
+                            <tbody data-recent-clicks></tbody>
+                        </table>
+                    </div>
+                    <div class="empty-state hidden" data-recent-empty>
+                        <h3>No click data available yet.</h3>
+                        <p>Recent visits will appear here.</p>
+                    </div>
+                </section>
+            </div>
+        </main>
+    </div>
+    <script th:src="@{/js/site.js}"></script>
+    <script th:src="@{/js/analytics.js}"></script>
+</body>
+
+</html>
