@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+
+<head th:replace="~{fragments/head :: head('SmartLink — Access your workspace')}"></head>
+
+<body class="auth-page">
+    <div th:replace="~{fragments/navbar :: navbar}"></div>
+    <main class="auth-shell">
+        <section class="auth-card">
+            <div class="auth-intro"><span class="eyebrow">WELCOME TO SMARTLINK</span>
+                <h1>Link sharing, made smarter.</h1>
+                <p>Sign in to manage your link or create a workspace in seconds.</p>
+            </div>
+            <div class="auth-tabs"><button type="button" class="auth-tab active"
+                    data-auth-tab="login">Login</button><button type="button" class="auth-tab"
+                    data-auth-tab="signup">Sign up</button></div>
+            <div class="alert hidden" data-auth-alert role="alert"></div>
+            <form class="form-stack" data-login-form>
+                <label>Username<input name="userName" autocomplete="username" required
+                        placeholder="you@company or username"></label>
+                <label>Password<input name="password" type="password" autocomplete="current-password" required
+                        placeholder="Enter your password"></label>
+                <button class="button button-primary button-wide" type="submit" data-submit>Login to dashboard
+                    <span>→</span></button>
+            </form>
+            <form class="form-stack hidden" data-signup-form>
+                <label>Username<input name="userName" autocomplete="username" required
+                        placeholder="Choose a username"></label>
+                <label>Email<input name="email" type="email" autocomplete="email" required
+                        placeholder="you@company.com"></label>
+                <label>Password<input name="password" type="password" autocomplete="new-password" required minlength="6"
+                        placeholder="At least 6 characters"></label>
+                <p class="field-hint">We’ll send a verification code after you submit your account details.</p>
+                <button class="button button-primary button-wide" type="submit" data-submit>Sign up
+                    <span>→</span></button>
+            </form>
+            <p class="auth-footnote">By continuing, you agree to use SmartLink responsibly.</p>
+        </section>
+    </main>
+    <script th:src="@{/js/site.js}"></script>
+    <script th:src="@{/js/auth.js}"></script>
+</body>
+
+</html>
