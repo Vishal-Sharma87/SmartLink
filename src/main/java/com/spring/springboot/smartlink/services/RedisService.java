@@ -1,11 +1,14 @@
 package com.spring.springboot.smartlink.services;
+import com.spring.springboot.smartlink.scripts.LuaScripts;
 import jakarta.annotation.PostConstruct;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.redis.core.StringRedisTemplate;
+import org.springframework.data.redis.core.script.RedisScript;
 import org.springframework.stereotype.Service;
 
 import java.util.*;
+import java.util.concurrent.TimeUnit;
 
 @Service
 @RequiredArgsConstructor
@@ -44,5 +47,18 @@ public class RedisService {
         String last = redisTemplate.opsForValue().get(URL_COUNTER_KEY);
 
         return last != null && Long.parseLong(last) < counterToCheck;
+    }
+
+    public void saveOTP(String email, String hashedOtp) {
+        redisTemplate.opsForValue().set(email, hashedOtp, 10, TimeUnit.MINUTES);
+    }
+
+    public boolean isValidOtp(String email, String otpToCheck) {
+        RedisScript<Long> validateOtpScript = LuaScripts.VALIDATE_OTP_SCRIPT;
+
+        Long isValid = redisTemplate.execute(validateOtpScript, List.of(email), otpToCheck);
+        log.debug("OTP validation {} for email {}", isValid.equals(1L) ? "succeeded" : "failed", email);
+
+        return isValid.equals(1L);
     }
 }
