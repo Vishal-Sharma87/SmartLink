@@ -1,2 +1,6 @@
-/mvnw text eol=lf
+# Normalize text files to LF in the repository.
+* text=auto eol=lf
+
+# Use CRLF for Windows command scripts.
 *.cmd text eol=crlf
+*.bat text eol=crlf 
