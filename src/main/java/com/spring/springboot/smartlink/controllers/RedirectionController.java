@@ -20,7 +20,7 @@ public class RedirectionController {
     @GetMapping("/{hash}")
     public String redirectionFromHashToLongUrl(@PathVariable String hash, Model model) {
 
-        return redirectService.putModelAttributesIfLinkExists(hash, model);
+        return redirectService.addModelAttributesAndGetPageToServeString(hash, model);
 
     }
 
