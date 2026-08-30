@@ -47,19 +47,27 @@ public class LinkService {
                 .toList();
 
     }
+    public void deleteLinkOfUser(String userName, String hash) {
+        Long idToDelete = Base62.decode(hash);
 
-    public boolean isAfterLastCounter(Long counterToCheck) {
-        return redisService.isAfter(counterToCheck);
+        if (hash.isEmpty() || isAfterLastCounter(idToDelete))
+            throw new NoSuchLinkExists("Link with hash %s not exists".formatted(hash));
+
+        mongoLinkService.deleteLinkOfUserById(idToDelete, userName);
+    }
+
+    public void deleAllLinkOfUser(String userName) {
+        mongoLinkService.deleteAllLinksOfAnUser(userName);
     }
 
     public LinkCreationResponseDto initializeCreation(String urlToShort, String userName) {
         Long urlCounter = redisService.getUrlCounter();
 
         String generatedHash = Base62.encode(urlCounter);
+        String shortUrl = buildShortUrl(generatedHash);
 
         LinkCreationDto dtoToCreate = LinkCreationDto.builder()
-                .generatedHash(generatedHash)
-                .id(urlCounter)
+                .shortUrl(shortUrl)
                 .longUrl(urlToShort)
                 .ownerUserName(userName)
                 .build();
@@ -67,7 +75,6 @@ public class LinkService {
         kafkaTemplate.send(LINK_CREATION_TOPIC, dtoToCreate);
         log.info("Queued asynchronous link creation for short code {} and user {}", generatedHash, userName);
 
-        String shortUrl = buildShortUrl(generatedHash);
         return  LinkCreationResponseDto
                 .builder()
                 .shortUrl(shortUrl)
@@ -120,12 +127,6 @@ public class LinkService {
                 .build();
     }
 
-    private String buildShortUrl(String generatedHash) {
-        if (companyEndpoint == null || companyEndpoint.isBlank()) {
-            return generatedHash;
-        }
-        return companyEndpoint.replaceAll("/+$", "") + "/" + generatedHash;
-    }
 
     public void save(Link createdLink) {
         linkRepository.save(createdLink);
@@ -155,6 +156,20 @@ public class LinkService {
         return linkScanResponseService.getLinkScanResponse(shortCode);
     }
 
+    public void  incrementAndGetMaliciousCount(String userName) {
+        mongoLinkService.incrementAndGetMaliciousUrlCountOfUser(userName);
+    }
+    public boolean isAfterLastCounter(Long counterToCheck) {
+        return redisService.isAfter(counterToCheck);
+    }
+
+    private String buildShortUrl(String generatedHash) {
+        if (companyEndpoint == null || companyEndpoint.isBlank()) {
+            return generatedHash;
+        }
+        return companyEndpoint.replaceAll("/+$", "") + "/" + generatedHash;
+    }
+
     private LinkAsResponseDto convertActualLinkToResponseLink(Link link) {
         return LinkAsResponseDto.builder()
                 .id(link.getId().toString())
@@ -168,16 +183,5 @@ public class LinkService {
     }
 
 
-    public void deleteLinkOfUser(String userName, String hash) {
-        Long idToDelete = Base62.decode(hash);
 
-        if (hash.isEmpty() || isAfterLastCounter(idToDelete))
-            throw new NoSuchLinkExists("Link with hash %s not exists".formatted(hash));
-
-        mongoLinkService.deleteLinkOfUserById(idToDelete, userName);
-    }
-
-    public void deleAllLinkOfUser(String userName) {
-        mongoLinkService.deleteAllLinksOfAnUser(userName);
-    }
 }
