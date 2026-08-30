@@ -21,12 +21,16 @@
 # ----------------------------------------------------------------------------
 # Apache Maven Wrapper startup batch script, version 3.3.4
 #
-# Optional ENV vars
-# -----------------
-#   JAVA_HOME - location of a JDK home dir, required when download maven via java source
-#   MVNW_REPOURL - repo url base for downloading maven distribution
-#   MVNW_USERNAME/MVNW_PASSWORD - user and password for downloading maven
-#   MVNW_VERBOSE - true: enable verbose log; debug: trace the mvnw script; others: silence the output
+# Environment variables:
+#   JAVA_HOME         - Path to the JDK home directory. Required when Maven
+#                       is downloaded via the Java source.
+#   MVNW_REPOURL      - Base repository URL used to download Maven.
+#   MVNW_USERNAME     - Username for Maven distribution download authentication.
+#   MVNW_PASSWORD     - Password for Maven distribution download authentication.
+#   MVNW_VERBOSE      - Controls output verbosity:
+#                       true    - Enable verbose logging.
+#                       debug   - Enable mvnw script tracing.
+#                       anything else - Suppress output.
 # ----------------------------------------------------------------------------
 
 set -euf
