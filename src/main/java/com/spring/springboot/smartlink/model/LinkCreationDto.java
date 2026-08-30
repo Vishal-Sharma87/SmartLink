@@ -12,6 +12,5 @@ import lombok.NoArgsConstructor;
 public class LinkCreationDto {
     private String longUrl;
     private String ownerUserName;
-    private String generatedHash;
-    private Long id;
+    private String shortUrl;
 }
