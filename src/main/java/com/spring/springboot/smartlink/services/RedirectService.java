@@ -1,8 +1,6 @@
 package com.spring.springboot.smartlink.services;
 
-import com.spring.springboot.smartlink.advices.exceptions.RedirectionHashInvalidException;
 import com.spring.springboot.smartlink.entity.Link;
-import com.spring.springboot.smartlink.dto.RedirectServiceResponseDto;
 import com.spring.springboot.smartlink.enums.Verdict;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -23,39 +21,48 @@ public class RedirectService {
     private static final String MODEL_ATTRIBUTE_LONG_URL = "longUrl";
     private static final String MODEL_ATTRIBUTE_SHORT_CODE = "shortCode";
 
+    private static final String ERROR_PAGE = "error";
+    private static final String TRACK_PAGE = "track";
+    private static final String SUSPICIOUS_PAGE = "suspicious-warning";
+    private static final String MALICIOUS_PAGE = "malicious-warning";
+
     private final RedisService redisService;
     private final LinkService linkService;
 
-    public RedirectServiceResponseDto getActualUrlIfExists(String hash) {
+    public String addAttributeAndGetPageToReturn(String hash, Model model) {
+        if (linkService.isAfterLastCounter(Base62.decode(hash))){
+            return ERROR_PAGE;
+        }
+
+        String longUrl;
+
         List<Object> cachedData = getCachedData(hash);
 
-        if (cachedData != null){
-            String longUrl = cachedData.getFirst().toString();
-            Verdict status = Verdict.valueOf(cachedData.getLast().toString());
+        if (cachedData != null && cachedData.getFirst() != null && cachedData.getLast() != null){
+            longUrl = cachedData.getFirst().toString();
+        }else {
+            Link linkInDb = linkService.getLinkByHash(hash);
 
-            return RedirectServiceResponseDto.builder()
-                    .longUrl(longUrl)
-                    .status(status)
-                    .build();
+            if (linkInDb == null) {
+                log.warn("Link with hash {} not found", hash);
+                return ERROR_PAGE;
+            }
 
+            longUrl = linkInDb.getActualUrl();
+            putInRedirectionCache(hash, linkInDb);
         }
 
-        Link linkInDb = linkService.getLinkByHash(hash);
+        model.addAttribute(MODEL_ATTRIBUTE_LONG_URL, longUrl);
+        model.addAttribute(MODEL_ATTRIBUTE_SHORT_CODE, hash);
 
-        if (linkInDb == null) {
-            log.warn("Link with hash {} not found", hash);
-            return null;
-        }
-
-        putInRedirectionCache(hash, linkInDb);
-
-        return RedirectServiceResponseDto.builder()
-                .longUrl(linkInDb.getActualUrl())
-                .status(linkInDb.getStatus())
-                .build();
+        return TRACK_PAGE;
     }
 
-    public String putModelAttributesIfLinkExists(String hash, Model model) {
+    public String addModelAttributesAndGetPageToServeString(String hash, Model model) {
+        if (linkService.isAfterLastCounter(Base62.decode(hash))){
+            return ERROR_PAGE;
+        }
+
         String longUrl;
         Verdict linkStatus;
 
@@ -68,7 +75,7 @@ public class RedirectService {
             Link linkInDb = linkService.getLinkByHash(hash);
 
             if (linkInDb == null) {
-                return "error"; // HTML page "error"
+                return ERROR_PAGE; // HTML page "error"
             }
 
             putInRedirectionCache(hash, linkInDb);
@@ -84,17 +91,18 @@ public class RedirectService {
             case Verdict.SAFE:
                 // Direct redirect
                 log.info("Safe short URL {} prepared for redirection", hash);
-                yield "track";
+                yield TRACK_PAGE;
 
             case Verdict.SUSPICIOUS, Verdict.PENDING_REVERIFICATION,
                  Verdict.UNVERIFIED:
                 log.warn("Short URL with hash {} requires a safety warning before redirection with status {}", hash, linkStatus);
-                yield  "suspicious-warning";
+                yield  SUSPICIOUS_PAGE;
+
 
             case Verdict.MALICIOUS:
                 // Show blocked page
                 log.warn("Blocked redirection for malicious short URL {}", hash);
-                yield  "malicious-warning";
+                yield  MALICIOUS_PAGE;
         };
     }
 
@@ -109,10 +117,6 @@ public class RedirectService {
     }
 
     private List<Object> getCachedData(String hash) {
-        if (linkService.isAfterLastCounter(Base62.decode(hash))){
-            throw new RedirectionHashInvalidException("Invalid shortCode: " + hash);
-        }
-
         String cacheKey = buildCacheKey(hash);
 
         List<Object> cacheHashKeys = List.of(
