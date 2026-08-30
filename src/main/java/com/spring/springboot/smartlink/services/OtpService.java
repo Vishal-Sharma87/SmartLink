@@ -1,10 +1,10 @@
 package com.spring.springboot.smartlink.services;
 
-import com.spring.springboot.smartlink.scripts.LuaScripts;
+import com.spring.springboot.smartlink.email.contentbuilder.EmailContentBuilder;
+import com.spring.springboot.smartlink.email.dto.EmailBody;
+import com.spring.springboot.smartlink.email.services.EmailService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.data.redis.core.StringRedisTemplate;
-import org.springframework.data.redis.core.script.RedisScript;
 import org.springframework.stereotype.Service;
 
 import java.nio.charset.StandardCharsets;
@@ -12,8 +12,6 @@ import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.security.SecureRandom;
 import java.util.Base64;
-import java.util.List;
-import java.util.concurrent.TimeUnit;
 
 @Slf4j
 @Service
@@ -21,37 +19,34 @@ import java.util.concurrent.TimeUnit;
 public class OtpService {
 
 
-    private final SecureRandom random = new SecureRandom();
-    private final StringRedisTemplate stringRedisTemplate;
+    private final RedisService redisService;
+    private final EmailService emailService;
+    private final EmailContentBuilder emailContentBuilder;
 
     public void sendOtp(String email) {
         String generatedOtp = generateFourLengthNumericOtp();
         String hashedOtp = hashOtp(generatedOtp);
 
-        stringRedisTemplate.opsForValue().set(email, hashedOtp, 10, TimeUnit.MINUTES);
+        redisService.saveOTP(email, hashedOtp);
 
-//        TODO
-//         My SendGrid triel has expired so I can't send Emails,
-//         so to just view the OTP for testing and confirm logic is working I have logged OTP here
-//         make sure to Integrate SendGrid Api before interview
+        EmailBody otpToEmail = emailContentBuilder.otpContent(
+                email,
+                generatedOtp);
 
-        log.info("OTP for email: {} is {}", email, generatedOtp);
+        emailService.sendEmail(otpToEmail);
     }
 
 
     public boolean isValidOtp(String email, String otp){
         String hashedOtpToPass = hashOtp(otp);
 
-        RedisScript<Long> validateOtpScript = LuaScripts.VALIDATE_OTP_SCRIPT;
-
-        Long isValid = stringRedisTemplate.execute(validateOtpScript, List.of(email), hashedOtpToPass);
-        log.debug("OTP validation {} for email {}", isValid.equals(1L) ? "succeeded" : "failed", email);
-
-        return isValid.equals(1L);
+        return redisService.isValidOtp(email, hashedOtpToPass);
     }
 
     private String generateFourLengthNumericOtp() {
+        SecureRandom random = new SecureRandom();
         StringBuilder sb = new StringBuilder(4);
+
         for (int i = 0; i < 4; i++) {
             sb.append(random.nextInt(10)); // 0–9
         }
