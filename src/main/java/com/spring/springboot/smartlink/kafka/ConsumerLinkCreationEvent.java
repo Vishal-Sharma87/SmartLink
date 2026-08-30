@@ -1,12 +1,13 @@
 package com.spring.springboot.smartlink.kafka;
 
+import com.spring.springboot.smartlink.email.contentbuilder.EmailContentBuilder;
+import com.spring.springboot.smartlink.email.dto.EmailBody;
+import com.spring.springboot.smartlink.email.services.EmailService;
 import com.spring.springboot.smartlink.entity.Link;
 import com.spring.springboot.smartlink.entity.User;
+import com.spring.springboot.smartlink.enums.Verdict;
 import com.spring.springboot.smartlink.model.LinkCreationDto;
-import com.spring.springboot.smartlink.services.LinkService;
-import com.spring.springboot.smartlink.services.UserService;
-import com.spring.springboot.smartlink.services.VirusTotalService;
-import com.spring.springboot.smartlink.services.EmailService;
+import com.spring.springboot.smartlink.services.*;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -27,6 +28,8 @@ public class ConsumerLinkCreationEvent {
 
     private final LinkService linkService;
 
+
+    private final EmailContentBuilder emailContentBuilder;
     private final EmailService emailService;
 
     @KafkaListener(
@@ -35,40 +38,74 @@ public class ConsumerLinkCreationEvent {
         containerFactory = "linkCreationKafkaListenerContainerFactory"
     )
     public void createNewLink(LinkCreationDto linkCreationDto) {
-        log.debug("Processing asynchronous link creation for short code {}", linkCreationDto.getGeneratedHash());
+
+        String shortUrl = linkCreationDto.getShortUrl();
+
+        String[] parts = shortUrl.split("/");
+        String generatedHash = parts[parts.length -1];
+
+        Long id = Base62.decode(generatedHash);
+
+        String longUrl = linkCreationDto.getLongUrl();
+        String ownerUserName = linkCreationDto.getOwnerUserName();
+
+        log.debug("Processing asynchronous link creation for short code {}", generatedHash);
+
+
         // Step 0: Fetch user from DB
-        User userInDb = userService.getUserByUserName(linkCreationDto.getOwnerUserName());
+        User userInDb = userService.getUserByUserName(ownerUserName);
         if (userInDb == null) {
-            log.warn("Owner user {} was not found for short code {} during asynchronous link creation",
-                    linkCreationDto.getOwnerUserName(), linkCreationDto.getGeneratedHash());
+            log.warn("Link creation rejected for hash:{}, cause: user with userName:{} not found",
+                    generatedHash, ownerUserName);
+
+            return;
         }
 
-        // Step 1: Scan URL asynchronously (non-blocking)
-        vtService.scanUrl(linkCreationDto.getLongUrl(), linkCreationDto.getGeneratedHash())
-                .subscribe(verdict -> {
-                    // This block runs when scan completes
-                    // Step 2: Proceed with URL creation or mark malicious
-                    // Create short URL in DB
-                    Link createdLink = Link.builder()
-                            .id(linkCreationDto.getId())
-                            .actualUrl(linkCreationDto.getLongUrl())
-                            .hashedKey(linkCreationDto.getGeneratedHash())
-                            .linkCreationTime(new Date())
-                            .status(verdict)
-                            .ownerUserName(linkCreationDto.getOwnerUserName())
-                            .abuseReports(new ArrayList<>())
-                            .firstReportedTime(null)
-                            .lastReportedTime(null)
-                            .reportCount(0)
-                            .clickCount(0)
-                            .build();
-                    linkService.save(createdLink);
-                    log.info("Asynchronous link creation completed for short code {} with verdict {}",
-                            linkCreationDto.getGeneratedHash(), verdict);
+        Verdict verdict = vtService.scanUrl(longUrl, generatedHash).block();
+        if (verdict == null){
+            log.warn("Scanned Verdicts is NULL for shortUrl:{}", shortUrl);
+            return;
+        }
 
-                    emailService.sendEmail(verdict, userInDb, linkCreationDto);
+        Link createdLink = Link.builder()
+                .id(id)
+                .actualUrl(longUrl)
+                .hashedKey(generatedHash)
+                .linkCreationTime(new Date())
+                .status(verdict)
+                .ownerUserName(ownerUserName)
+                .abuseReports(new ArrayList<>())
+                .firstReportedTime(null)
+                .lastReportedTime(null)
+                .reportCount(0)
+                .clickCount(0)
+                .build();
 
-                });
+        linkService.save(createdLink);
+        log.info("Asynchronous link creation completed for short code {} with verdict {}",
+                generatedHash, verdict);
+
+        EmailBody linkCreated;
+        if (Verdict.MALICIOUS.equals(verdict)){
+            linkService.incrementAndGetMaliciousCount(ownerUserName);
+            linkCreated = emailContentBuilder.createdLinkIsMaliciousContent(
+                    ownerUserName,
+                    userInDb.getEmail(),
+                    longUrl,
+                    shortUrl
+            );
+
+        }else{
+            linkCreated = emailContentBuilder.linkCreatedContent(
+                    ownerUserName,
+                    userInDb.getEmail(),
+                    verdict,
+                    longUrl,
+                    shortUrl
+            );
+        }
+
+        emailService.sendEmail(linkCreated);
     }
 
 }
