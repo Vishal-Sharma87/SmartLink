@@ -44,11 +44,23 @@ virustotal:
   api-key: ${VT_API_KEY}
   analysis-url: ${VT_ANALYSIS_URL}
 
-sendgrid:
-  api_key: ${SENDGRID_API_KEY}
-  verified:
-    senders:
-      email: ${SENDGRID_EMAIL}
+email:
+
+  sender:
+    name: ${SENDER_NAME}
+    email: ${SENDER_EMAIL}
+
+
+  provider:
+    base-url: ${EMAIL_PROVIDER_BASE_URL}
+    api-key: ${EMAIL_PROVIDER_API_KEY}
+
+  subject:
+    otp: ${EMAIL_OTP_SUBJECT}
+    report-accepted: ${EMAIL_REPORT_ACCEPTED_SUBJECT}
+    link-malicious: ${EMAIL_MALICIOUS_LINK_SUBJECT}
+    link-created: ${EMAIL_LINK_CREATED_SUBJECT}
+    welcome: ${EMAIL_WELCOME_SUBJECT}
 
 ipinfo:
   token: ${IP_INFO_TOKEN}
@@ -60,3 +72,5 @@ logging:
   level:
     org.apache.kafka: WARN
     org.springframework.kafka: WARN
+
+
