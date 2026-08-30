@@ -6,6 +6,9 @@ import com.spring.springboot.smartlink.dto.requestDtos.LoginRequestDto;
 import com.spring.springboot.smartlink.dto.requestDtos.SignupRequestDto;
 import com.spring.springboot.smartlink.dto.requestDtos.SignupInitiationRequestDto;
 import com.spring.springboot.smartlink.dto.requestDtos.SignupVerificationRequestDto;
+import com.spring.springboot.smartlink.email.contentbuilder.EmailContentBuilder;
+import com.spring.springboot.smartlink.email.dto.EmailBody;
+import com.spring.springboot.smartlink.email.services.EmailService;
 import com.spring.springboot.smartlink.entity.User;
 import com.spring.springboot.smartlink.repositories.UserRepository;
 import lombok.RequiredArgsConstructor;
@@ -28,6 +31,8 @@ public class AuthService {
     private final AuthenticationManager authenticationManager;
     private final JwtService jwtService;
     private final OtpService otpService;
+    private final EmailContentBuilder emailContentBuilder;
+    private final EmailService emailService;
 
     // Business logic for signup
     public void initiateSignup(SignupInitiationRequestDto request) {
@@ -46,6 +51,10 @@ public class AuthService {
             throw new InvalidOTPException("Invalid OTP, email: " + details.getEmail());
         }
         saveUser(details);
+
+        EmailBody welcomeContent = emailContentBuilder.welcomeContent(details.getUserName(), details.getEmail());
+        emailService.sendEmail(welcomeContent);
+
         log.info("User registration completed for username {}", details.getUserName());
     }
 
@@ -53,25 +62,16 @@ public class AuthService {
         User userInDb = userRepository.findUserByUserName(request.getUserName());
         if (userInDb != null)
             throw new UserWithUserNameAlreadyExitsException("User with userName :" + request.getUserName() + " already exists");
-        try {
-            boolean valid = otpService.isValidOtp(request.getEmail(), request.getOtp());
 
-            if (!valid) throw new InvalidOTPException("Invalid OTP, email: " + request.getEmail());
+        if(!otpService.isValidOtp(request.getEmail(), request.getOtp()))
+            throw new InvalidOTPException("Invalid OTP, email: " + request.getEmail());
 
-            SignupInitiationRequestDto details = new SignupInitiationRequestDto();
-            details.setEmail(request.getEmail());
-            details.setUserName(request.getUserName());
-            details.setPassword(request.getPassword());
-            saveUser(details);
-            log.info("User registration completed for username {}", request.getUserName());
-//        "User registered successfully!"
+        SignupInitiationRequestDto details = new SignupInitiationRequestDto();
+        details.setEmail(request.getEmail());
+        details.setUserName(request.getUserName());
+        details.setPassword(request.getPassword());
 
-
-        } catch (Exception e) {
-            log.error("Something went wrong while validating user OTP for email: {}, exception: {}", request.getEmail(), e.getMessage());
-            log.error("User registration failed for username {}", request.getUserName(), e);
-            throw new InvalidOTPException("Invalid otp, Email:" + request.getEmail());
-        }
+        saveUser(details);
     }
 
     private void saveUser(SignupInitiationRequestDto request) {
@@ -85,7 +85,6 @@ public class AuthService {
                 .build());
     }
 
-    // Business logic for login
     public String loginUser(LoginRequestDto request) {
         authenticationManager.authenticate(
                 new UsernamePasswordAuthenticationToken(
