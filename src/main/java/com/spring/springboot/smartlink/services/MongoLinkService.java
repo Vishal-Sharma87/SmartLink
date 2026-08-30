@@ -5,6 +5,7 @@ import com.spring.springboot.smartlink.dto.requestDtos.ReportLinkRequestDto;
 import com.spring.springboot.smartlink.entity.AbuseReport;
 import com.spring.springboot.smartlink.entity.Link;
 
+import com.spring.springboot.smartlink.entity.User;
 import com.spring.springboot.smartlink.enums.Verdict;
 import com.spring.springboot.smartlink.repositories.LinkRepository;
 import jakarta.validation.Valid;
@@ -15,6 +16,7 @@ import org.springframework.data.mongodb.core.MongoTemplate;
 import org.springframework.data.mongodb.core.query.Criteria;
 import org.springframework.data.mongodb.core.query.Query;
 import org.springframework.data.mongodb.core.query.Update;
+import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -30,6 +32,7 @@ public class MongoLinkService {
     private static final String STATUS =  "status";
     private static final String REPORT_COUNT = "reportCount";
     private static final String REPORTER_EMAIL = "reporterEmail";
+    private static final String MALICIOUS_URL_COUNT = "maliciousUrlsCreatedCount";
 
     private final MongoTemplate mongoTemplate;
     private final LinkRepository linkRepository;
@@ -121,5 +124,25 @@ public class MongoLinkService {
         query.limit(1);
 
         return !mongoTemplate.find(query, AbuseReport.class).isEmpty();
+    }
+
+    public void  incrementAndGetMaliciousUrlCountOfUser(String userName) {
+        Query query = new Query();
+        query.addCriteria(
+                Criteria.where(OWNER_USER_NAME).is(userName)
+        );
+
+        Update update = new Update()
+                .inc(MALICIOUS_URL_COUNT, 1);
+
+        User updated = mongoTemplate.findAndModify(
+                query,
+                update,
+                FindAndModifyOptions.options().returnNew(true),
+                User.class
+        );
+
+        if (updated == null) throw new UsernameNotFoundException("User not found, userName: " + userName);
+
     }
 }
