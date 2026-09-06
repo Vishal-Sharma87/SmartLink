@@ -1,8 +1,7 @@
-package com.spring.springboot.smartlink.services;
+package com.spring.springboot.smartlink.jwt.services;
 
-import com.spring.springboot.smartlink.entity.User;
-import com.spring.springboot.smartlink.advices.exceptions.ResourceNotExistsException;
-import com.spring.springboot.smartlink.repositories.UserRepository;
+import com.spring.springboot.smartlink.user.entities.User;
+import com.spring.springboot.smartlink.user.repositories.UserRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.core.userdetails.UserDetails;
@@ -23,7 +22,7 @@ public class UserDetailsServiceImpl implements UserDetailsService {
 
         if (userInDb == null) {
             log.warn("Authentication rejected because username {} does not exist", username);
-            throw new ResourceNotExistsException("User with userName " + username + " Not exists in database");
+            throw new UsernameNotFoundException(username);
         }
 
         log.debug("User details loaded for username {}", username);

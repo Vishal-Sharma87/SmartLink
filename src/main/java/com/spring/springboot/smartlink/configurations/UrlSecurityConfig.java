@@ -1,7 +1,7 @@
 package com.spring.springboot.smartlink.configurations;
 
-import com.spring.springboot.smartlink.filter.JwtFilter;
-import com.spring.springboot.smartlink.services.UserDetailsServiceImpl;
+import com.spring.springboot.smartlink.jwt.filter.JwtFilter;
+import com.spring.springboot.smartlink.jwt.services.UserDetailsServiceImpl;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -29,35 +29,18 @@ public class UrlSecurityConfig {
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         http
 
-
                 // Authorize requests
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers(
-                                new RegexRequestMatcher("^/[a-zA-Z0-9]{7}$", "GET")
-                        ).permitAll()
+                                new RegexRequestMatcher("^/[a-zA-Z0-9]{7}$", "GET"))
+                        .permitAll()
                         .requestMatchers("/user", "/user/**").hasRole("USER")
                         .requestMatchers(
-                        "/auth/**"
-                                , "/"
-                                , "/home"
-                                , "/about"
-                                , "/auth"
-                                , "/login"
-                                , "/signup"
-                                , "/signup/verify"
-                                , "/dashboard"
-                                , "/analytics"
-                                , "/report-abuse-page"
-                                , "/report"
-                                , "/css/**"
-                                , "/js/**"
-                                , "/favicon.ico"
-                                , "/verify/**"
-                                , "/report-abuse/**"
-                                , "/api/**"
-                        ).permitAll()
-                        .anyRequest().authenticated()
-                )
+                                "/auth/**", "/", "/home", "/about", "/auth", "/login", "/signup", "/signup/verify",
+                                "/dashboard", "/analytics", "/report-abuse-page", "/report", "/css/**", "/js/**",
+                                "/favicon.ico", "/verify/**", "/report-abuse/**", "/api/**")
+                        .permitAll()
+                        .anyRequest().authenticated())
                 // Enable JWT based Authentication
                 .addFilterBefore(jwtFilter, UsernamePasswordAuthenticationFilter.class)
 
@@ -85,6 +68,5 @@ public class UrlSecurityConfig {
     public AuthenticationManager authenticationManager(AuthenticationConfiguration config) throws Exception {
         return config.getAuthenticationManager();
     }
-
 
 }

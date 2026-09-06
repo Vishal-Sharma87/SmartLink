@@ -1,5 +1,4 @@
-package com.spring.springboot.smartlink.dto.requestDtos;
-
+package com.spring.springboot.smartlink.user.authentication.dtos;
 
 import jakarta.validation.constraints.NotBlank;
 import lombok.Data;

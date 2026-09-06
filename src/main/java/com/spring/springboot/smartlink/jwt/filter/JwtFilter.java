@@ -1,14 +1,12 @@
-package com.spring.springboot.smartlink.filter;
+package com.spring.springboot.smartlink.jwt.filter;
 
-import com.spring.springboot.smartlink.services.UserDetailsServiceImpl;
-import com.spring.springboot.smartlink.services.JwtService;
+import com.spring.springboot.smartlink.jwt.services.UserDetailsServiceImpl;
+import com.spring.springboot.smartlink.jwt.services.JwtService;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
-import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.jetbrains.annotations.NotNull;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -18,21 +16,27 @@ import org.springframework.stereotype.Component;
 import org.springframework.web.filter.OncePerRequestFilter;
 import org.springframework.web.servlet.HandlerExceptionResolver;
 
-
-@RequiredArgsConstructor
 @Component
 @Slf4j
 public class JwtFilter extends OncePerRequestFilter {
 
     private final JwtService jwtService;
     private final UserDetailsServiceImpl userDetailsService;
+    private final HandlerExceptionResolver handlerExceptionResolver;
 
-    @Autowired
-    @Qualifier("handlerExceptionResolver")
-    private HandlerExceptionResolver handlerExceptionResolver;
+    public JwtFilter(
+            JwtService jwtService,
+            UserDetailsServiceImpl userDetailsService,
+            @Qualifier("handlerExceptionResolver") HandlerExceptionResolver handlerExceptionResolver) {
+
+        this.jwtService = jwtService;
+        this.userDetailsService = userDetailsService;
+        this.handlerExceptionResolver = handlerExceptionResolver;
+    }
 
     @Override
-    protected void doFilterInternal(@NotNull HttpServletRequest request, @NotNull HttpServletResponse response, @NotNull FilterChain filterChain){
+    protected void doFilterInternal(@NotNull HttpServletRequest request, @NotNull HttpServletResponse response,
+            @NotNull FilterChain filterChain) {
         try {
             String extractedHeader = request.getHeader("Authorization");
 
@@ -48,7 +52,8 @@ public class JwtFilter extends OncePerRequestFilter {
             if (subject != null && SecurityContextHolder.getContext().getAuthentication() == null) {
                 UserDetails userDetails = userDetailsService.loadUserByUsername(subject);
                 // propagate authorities so role checks (e.g., hasRole("USER")) work
-                UsernamePasswordAuthenticationToken auth = new UsernamePasswordAuthenticationToken(userDetails, null, userDetails.getAuthorities());
+                UsernamePasswordAuthenticationToken auth = new UsernamePasswordAuthenticationToken(userDetails, null,
+                        userDetails.getAuthorities());
                 auth.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
 
                 SecurityContextHolder.getContext().setAuthentication(auth);
