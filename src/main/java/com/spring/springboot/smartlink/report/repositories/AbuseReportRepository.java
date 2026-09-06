@@ -1,6 +1,6 @@
-package com.spring.springboot.smartlink.repositories;
+package com.spring.springboot.smartlink.report.repositories;
 
-import com.spring.springboot.smartlink.entity.AbuseReport;
+import com.spring.springboot.smartlink.report.entities.AbuseReport;
 import org.bson.types.ObjectId;
 import org.springframework.data.mongodb.repository.MongoRepository;
 

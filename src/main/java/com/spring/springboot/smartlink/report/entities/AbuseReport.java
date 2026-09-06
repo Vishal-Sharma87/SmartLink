@@ -1,5 +1,4 @@
-package com.spring.springboot.smartlink.entity;
-
+package com.spring.springboot.smartlink.report.entities;
 
 import com.spring.springboot.smartlink.enums.ReportCause;
 import jakarta.validation.constraints.Email;
@@ -15,7 +14,6 @@ import org.springframework.data.mongodb.core.mapping.Document;
 
 import java.time.LocalDateTime;
 import java.util.List;
-
 
 @Data
 @Document(collection = "link_reports")

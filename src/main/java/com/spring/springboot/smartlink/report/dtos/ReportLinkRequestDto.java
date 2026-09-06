@@ -1,5 +1,4 @@
-package com.spring.springboot.smartlink.dto.requestDtos;
-
+package com.spring.springboot.smartlink.report.dtos;
 
 import com.spring.springboot.smartlink.enums.ReportCause;
 import jakarta.validation.constraints.Email;
