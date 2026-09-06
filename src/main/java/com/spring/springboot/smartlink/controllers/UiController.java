@@ -1,6 +1,8 @@
 package com.spring.springboot.smartlink.controllers;
 
+import com.spring.springboot.smartlink.user.authentication.dtos.SignupInitiationRequestDto;
 import com.spring.springboot.smartlink.enums.ReportCause;
+import com.spring.springboot.smartlink.user.authentication.services.AuthService;
 import jakarta.servlet.http.HttpSession;
 import org.springframework.ui.Model;
 import org.springframework.stereotype.Controller;
@@ -13,7 +15,7 @@ import org.springframework.web.bind.annotation.GetMapping;
 @Controller
 public class UiController {
 
-    @GetMapping({"/", "/home"})
+    @GetMapping({ "/", "/home" })
     public String home() {
         return "index";
     }
@@ -23,7 +25,7 @@ public class UiController {
         return "about";
     }
 
-    @GetMapping({"/auth", "/login", "/signup"})
+    @GetMapping({ "/auth", "/login", "/signup" })
     public String authentication() {
         return "auth";
     }
@@ -38,7 +40,7 @@ public class UiController {
         return "analytics";
     }
 
-    @GetMapping({"/report-abuse-page", "/report"})
+    @GetMapping({ "/report-abuse-page", "/report" })
     public String reportAbuse(Model model) {
         model.addAttribute("reportCauses", ReportCause.values());
         return "report-abuse";
@@ -46,9 +48,10 @@ public class UiController {
 
     @GetMapping("/signup/verify")
     public String signupVerification(HttpSession session, Model model) {
-        Object pendingSignup = session.getAttribute(AuthController.PENDING_SIGNUP_SESSION_KEY);
-        if (pendingSignup == null) return "redirect:/auth?mode=signup";
-        model.addAttribute("pendingEmail", ((com.spring.springboot.smartlink.dto.requestDtos.SignupInitiationRequestDto) pendingSignup).getEmail());
+        Object pendingSignup = session.getAttribute(AuthService.PENDING_SIGNUP_SESSION_KEY);
+        if (pendingSignup == null)
+            return "redirect:/auth?mode=signup";
+        model.addAttribute("pendingEmail", ((SignupInitiationRequestDto) pendingSignup).getEmail());
         return "signup-verify";
     }
 }

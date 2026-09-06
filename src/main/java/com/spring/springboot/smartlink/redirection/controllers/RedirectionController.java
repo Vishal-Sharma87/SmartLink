@@ -1,5 +1,6 @@
-package com.spring.springboot.smartlink.controllers;
-import com.spring.springboot.smartlink.services.RedirectService;
+package com.spring.springboot.smartlink.redirection.controllers;
+
+import com.spring.springboot.smartlink.redirection.services.RedirectService;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -10,7 +11,7 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
 
 @Slf4j
-@Controller // using @Controller because it supports html page rendering and user clicks
+@Controller // using @Controller because it supports HTML page rendering and user clicks
 @RequestMapping()
 @RequiredArgsConstructor
 public class RedirectionController {
@@ -23,6 +24,5 @@ public class RedirectionController {
         return redirectService.addModelAttributesAndGetPageToServeString(hash, model);
 
     }
-
 
 }

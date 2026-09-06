@@ -1,5 +1,4 @@
-package com.spring.springboot.smartlink.dto;
-
+package com.spring.springboot.smartlink.redirection.dtos;
 
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -10,7 +9,6 @@ import lombok.NoArgsConstructor;
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-
 public class TrackPayloadDto {
     // used to get clicker's device's, browser's, etc. info for real time analysis
 
