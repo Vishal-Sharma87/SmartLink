@@ -1,4 +1,4 @@
-package com.spring.springboot.smartlink.dto.geoIpResponses;
+package com.spring.springboot.smartlink.geoip.model;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.Data;

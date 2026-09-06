@@ -1,4 +1,4 @@
-package com.spring.springboot.smartlink.dto.responseDtos;
+package com.spring.springboot.smartlink.analytics.dtos;
 
 import lombok.AllArgsConstructor;
 import lombok.Builder;

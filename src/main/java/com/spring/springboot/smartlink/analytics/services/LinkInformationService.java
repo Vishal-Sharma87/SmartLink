@@ -1,7 +1,7 @@
-package com.spring.springboot.smartlink.services;
+package com.spring.springboot.smartlink.analytics.services;
 
-import com.spring.springboot.smartlink.entity.LinkInformation;
-import com.spring.springboot.smartlink.repositories.LinkInformationRepository;
+import com.spring.springboot.smartlink.analytics.entities.LinkInformation;
+import com.spring.springboot.smartlink.analytics.repositories.LinkInformationRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 

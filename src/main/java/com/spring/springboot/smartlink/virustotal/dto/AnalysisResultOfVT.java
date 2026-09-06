@@ -1,4 +1,4 @@
-package com.spring.springboot.smartlink.dto.virusTotalDtos;
+package com.spring.springboot.smartlink.virustotal.dto;
 
 import lombok.Data;
 
@@ -15,9 +15,9 @@ public class AnalysisResultOfVT {
     public static class Attributes {
         private Stats stats;
 
-        private long date;      // epoch seconds
+        private long date; // epoch seconds
 
-        private String status;  // e.g. "completed"
+        private String status; // e.g. "completed"
     }
 
     @Data

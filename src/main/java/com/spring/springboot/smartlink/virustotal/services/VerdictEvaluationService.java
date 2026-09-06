@@ -1,10 +1,11 @@
-package com.spring.springboot.smartlink.services;
+package com.spring.springboot.smartlink.virustotal.services;
 
-import com.spring.springboot.smartlink.dto.virusTotalDtos.AnalysisResultOfVT;
-import com.spring.springboot.smartlink.entity.LinkScanResponse;
+import com.spring.springboot.smartlink.virustotal.dto.AnalysisResultOfVT;
+import com.spring.springboot.smartlink.analytics.entities.LinkScanResponse;
 import com.spring.springboot.smartlink.enums.Verdict;
 import com.spring.springboot.smartlink.enums.VerdictReason;
 
+import com.spring.springboot.smartlink.analytics.services.LinkScanResponseService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 

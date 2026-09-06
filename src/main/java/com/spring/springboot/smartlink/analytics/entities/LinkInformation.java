@@ -1,6 +1,6 @@
-package com.spring.springboot.smartlink.entity;
+package com.spring.springboot.smartlink.analytics.entities;
 
-import com.spring.springboot.smartlink.dto.geoIpResponses.IpInfo;
+import com.spring.springboot.smartlink.geoip.model.IpInfo;
 import com.spring.springboot.smartlink.enums.Browser;
 import com.spring.springboot.smartlink.enums.Device;
 import com.spring.springboot.smartlink.enums.OperatingSystem;

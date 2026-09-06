@@ -1,7 +1,9 @@
-package com.spring.springboot.smartlink.services;
+package com.spring.springboot.smartlink.analytics.services;
 
-import com.spring.springboot.smartlink.dto.responseDtos.LinkAnalyticsResponseDto;
-import com.spring.springboot.smartlink.entity.LinkInformation;
+import com.spring.springboot.smartlink.analytics.dtos.LinkAnalyticsResponseDto;
+import com.spring.springboot.smartlink.analytics.entities.LinkInformation;
+import com.spring.springboot.smartlink.link.dtos.LinkAsResponseDto;
+import com.spring.springboot.smartlink.link.services.LinkService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
@@ -15,9 +17,15 @@ import java.util.stream.Collectors;
 @RequiredArgsConstructor
 public class LinkAnalyticsService {
 
+    private final LinkService linkService;
     private final LinkInformationService linkInformationService;
 
-    public LinkAnalyticsResponseDto summarize(String shortHash, String actualUrl, int fallbackClickCount) {
+    public LinkAnalyticsResponseDto summarize(String userName, String shortHash) {
+        LinkAsResponseDto link = linkService.findLinkOfUser(shortHash, userName);
+
+        String actualUrl = link.getActualUrl();
+        int fallbackClickCount = link.getClickCnt() == null ? 0 : link.getClickCnt();
+
         List<LinkInformation> clicks = linkInformationService.findByShortHash(shortHash);
         int totalClicks = Math.max(fallbackClickCount, clicks.size());
         return LinkAnalyticsResponseDto.builder()
@@ -62,18 +70,38 @@ public class LinkAnalyticsService {
     }
 
     private String country(LinkInformation info) {
-        return info.getEntityIpInformation() == null ? null : first(info.getEntityIpInformation().getCountry(), info.getEntityIpInformation().getCountryCode());
+        return info.getEntityIpInformation() == null ? null
+                : first(info.getEntityIpInformation().getCountry(), info.getEntityIpInformation().getCountryCode());
     }
 
     private String continent(LinkInformation info) {
-        return info.getEntityIpInformation() == null ? null : first(info.getEntityIpInformation().getContinent(), info.getEntityIpInformation().getContinentCode());
+        return info.getEntityIpInformation() == null ? null
+                : first(info.getEntityIpInformation().getContinent(), info.getEntityIpInformation().getContinentCode());
     }
 
-    private String device(LinkInformation info) { return info.getDeviceInfo() == null || info.getDeviceInfo().getDevice() == null ? null : prettify(info.getDeviceInfo().getDevice().name()); }
-    private String browser(LinkInformation info) { return info.getDeviceInfo() == null || info.getDeviceInfo().getBrowser() == null ? null : prettify(info.getDeviceInfo().getBrowser().name()); }
-    private String operatingSystem(LinkInformation info) { return info.getDeviceInfo() == null || info.getDeviceInfo().getOperatingSystem() == null ? null : prettify(info.getDeviceInfo().getOperatingSystem().name()); }
-    private String first(String primary, String fallback) { return present(primary) ? primary : fallback; }
-    private boolean present(String value) { return value != null && !value.isBlank(); }
+    private String device(LinkInformation info) {
+        return info.getDeviceInfo() == null || info.getDeviceInfo().getDevice() == null ? null
+                : prettify(info.getDeviceInfo().getDevice().name());
+    }
+
+    private String browser(LinkInformation info) {
+        return info.getDeviceInfo() == null || info.getDeviceInfo().getBrowser() == null ? null
+                : prettify(info.getDeviceInfo().getBrowser().name());
+    }
+
+    private String operatingSystem(LinkInformation info) {
+        return info.getDeviceInfo() == null || info.getDeviceInfo().getOperatingSystem() == null ? null
+                : prettify(info.getDeviceInfo().getOperatingSystem().name());
+    }
+
+    private String first(String primary, String fallback) {
+        return present(primary) ? primary : fallback;
+    }
+
+    private boolean present(String value) {
+        return value != null && !value.isBlank();
+    }
+
     private String prettify(String value) {
         String[] words = value.replace('_', ' ').toLowerCase().split(" ");
         return java.util.Arrays.stream(words)

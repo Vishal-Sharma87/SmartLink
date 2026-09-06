@@ -1,6 +1,6 @@
-package com.spring.springboot.smartlink.repositories;
+package com.spring.springboot.smartlink.analytics.repositories;
 
-import com.spring.springboot.smartlink.entity.LinkInformation;
+import com.spring.springboot.smartlink.analytics.entities.LinkInformation;
 import org.bson.types.ObjectId;
 import org.springframework.data.mongodb.repository.MongoRepository;
 

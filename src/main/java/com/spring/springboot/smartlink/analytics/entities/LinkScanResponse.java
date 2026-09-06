@@ -1,4 +1,4 @@
-package com.spring.springboot.smartlink.entity;
+package com.spring.springboot.smartlink.analytics.entities;
 
 import com.spring.springboot.smartlink.enums.Verdict;
 import com.spring.springboot.smartlink.enums.VerdictReason;

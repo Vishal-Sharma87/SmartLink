@@ -2,7 +2,6 @@ package com.spring.springboot.smartlink.enums;
 
 import com.fasterxml.jackson.annotation.JsonValue;
 
-
 public enum Verdict {
     SAFE, SUSPICIOUS, UNVERIFIED, MALICIOUS, PENDING_REVERIFICATION;
 

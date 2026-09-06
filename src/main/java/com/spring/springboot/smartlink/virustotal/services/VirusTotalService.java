@@ -1,11 +1,10 @@
-package com.spring.springboot.smartlink.services;
+package com.spring.springboot.smartlink.virustotal.services;
 
-import com.spring.springboot.smartlink.dto.virusTotalDtos.AnalysisIdOfVT;
-import com.spring.springboot.smartlink.dto.virusTotalDtos.AnalysisResultOfVT;
+import com.spring.springboot.smartlink.virustotal.dto.AnalysisIdOfVT;
+import com.spring.springboot.smartlink.virustotal.dto.AnalysisResultOfVT;
 import com.spring.springboot.smartlink.enums.Verdict;
-import lombok.RequiredArgsConstructor;
+import com.spring.springboot.smartlink.virustotal.configs.VirusTotalConfigs;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.MediaType;
 import org.springframework.stereotype.Service;
 import org.springframework.web.reactive.function.BodyInserters;
@@ -15,19 +14,22 @@ import reactor.core.publisher.Mono;
 import java.time.Duration;
 
 @Service
-@RequiredArgsConstructor
 @Slf4j
 public class VirusTotalService {
 
     private final WebClient webClient;
+    private final VerdictEvaluationService verdictEvaluationService;
+    private final VirusTotalConfigs virusTotalConfigs;
 
-    @Value("${virustotal.api-key}")
-    private String VTApiKey;
+    public VirusTotalService(
+            WebClient webClient,
+            VirusTotalConfigs virusTotalConfigs,
+            VerdictEvaluationService verdictEvaluationService) {
 
-    @Value("${virustotal.analysis-url}")
-    private String apiToGetAnalysisId;
-
-    private final VerdictEvaluationService finalVerdict;
+        this.webClient = webClient;
+        this.virusTotalConfigs = virusTotalConfigs;
+        this.verdictEvaluationService = verdictEvaluationService;
+    }
 
     /**
      * Scans a URL and returns a FinalVerdict asynchronously.
@@ -36,8 +38,8 @@ public class VirusTotalService {
         log.debug("Starting URL safety scan for short code {}", hash);
 
         return webClient.post()
-                .uri(apiToGetAnalysisId)
-                .header("x-apikey", VTApiKey)
+                .uri(virusTotalConfigs.apiUrl())
+                .header("x-apikey", virusTotalConfigs.apiKey())
                 .contentType(MediaType.APPLICATION_FORM_URLENCODED)
                 .body(BodyInserters.fromFormData("url", url))
                 .retrieve()
@@ -50,7 +52,7 @@ public class VirusTotalService {
                             .timeout(Duration.ofMinutes(2)) // Max polling duration
                             .map(result -> {
                                 AnalysisResultOfVT.Stats stats = result.getData().getAttributes().getStats();
-                                return finalVerdict.evaluate(stats, hash, url);
+                                return verdictEvaluationService.evaluate(stats, hash, url);
                             });
                 })
                 .doOnError(e -> log.error("VirusTotal scan failed for short code {}", hash, e))
@@ -64,7 +66,7 @@ public class VirusTotalService {
     private Mono<AnalysisResultOfVT> fetchAnalysis(String nextUri) {
         return webClient.get()
                 .uri(nextUri)
-                .header("x-apikey", VTApiKey)
+                .header("x-apikey", virusTotalConfigs.apiKey())
                 .retrieve()
                 .bodyToMono(AnalysisResultOfVT.class)
                 // Only emit the result when scan is fully completed

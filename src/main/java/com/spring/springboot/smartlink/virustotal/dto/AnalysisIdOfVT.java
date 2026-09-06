@@ -1,4 +1,4 @@
-package com.spring.springboot.smartlink.dto.virusTotalDtos;
+package com.spring.springboot.smartlink.virustotal.dto;
 
 import lombok.Data;
 
@@ -13,8 +13,7 @@ public class AnalysisIdOfVT {
 
     @Data
     public static class Links {
-        //link to request a GET call to get response of scanned url
+        // link to request a GET call to get response of scanned url
         private String self;
     }
 }
-
