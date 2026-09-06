@@ -128,7 +128,7 @@
       }
       if (!response.ok) throw new Error(await SmartLink.errorMessage(response));
       const data = await response.json();
-      render(data.data || []);
+      render(data.data?.links || []);
     } catch (error) {
       SmartLink.showAlert(alert, error.message, "error");
     }
@@ -163,8 +163,8 @@
       ]);
       if (!linkResponse.ok)
         throw new Error(await SmartLink.errorMessage(linkResponse));
-      const link = await linkResponse.json(),
-        scan = scanResponse.ok ? await scanResponse.json() : null,
+      const link = (await linkResponse.json()).data,
+        scan = scanResponse.ok ? (await scanResponse.json()).data : null,
         original = escape(link.actualUrl),
         short = escape(shortUrl(link.hashedKey));
       content.innerHTML =
@@ -223,7 +223,7 @@
         }
         if (!response.ok)
           throw new Error(await SmartLink.errorMessage(response));
-        const data = await response.json();
+        const data = (await response.json()).data;
         link.href = data.shortUrl;
         link.textContent = data.shortUrl;
         result.classList.remove("hidden");

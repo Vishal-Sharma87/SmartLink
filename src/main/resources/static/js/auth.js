@@ -43,7 +43,7 @@
       });
       if (!response.ok) throw new Error(await SmartLink.errorMessage(response));
       const body = await response.json();
-      SmartLink.saveAuth(body.data);
+      SmartLink.saveAuth(body.data.token);
       window.location.href = "/dashboard";
     } catch (error) {
       SmartLink.showAlert(alert, error.message, "error");

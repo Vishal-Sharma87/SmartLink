@@ -28,7 +28,7 @@
         headers: SmartLink.authHeaders(),
       });
       if (!response.ok) throw new Error(await SmartLink.errorMessage(response));
-      const links = (await response.json()).data || [];
+      const links = (await response.json()).data?.links || [];
       select.innerHTML = links.length
         ? links
             .map(
@@ -73,7 +73,7 @@
         { headers: SmartLink.authHeaders() },
       );
       if (!response.ok) throw new Error(await SmartLink.errorMessage(response));
-      const data = await response.json();
+      const data = (await response.json()).data;
       SmartLink.hideAlert(alert);
       content.classList.remove("hidden");
       root.querySelector("[data-analytics-hash]").textContent = data.shortHash;
