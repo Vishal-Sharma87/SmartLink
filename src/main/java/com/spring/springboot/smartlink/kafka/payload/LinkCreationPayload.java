@@ -1,4 +1,4 @@
-package com.spring.springboot.smartlink.model;
+package com.spring.springboot.smartlink.kafka.payload;
 
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -9,7 +9,7 @@ import lombok.NoArgsConstructor;
 @Builder
 @AllArgsConstructor
 @NoArgsConstructor
-public class LinkCreationDto {
+public class LinkCreationPayload {
     private String longUrl;
     private String ownerUserName;
     private String shortUrl;
