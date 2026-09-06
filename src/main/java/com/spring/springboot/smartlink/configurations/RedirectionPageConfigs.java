@@ -2,7 +2,7 @@ package com.spring.springboot.smartlink.configurations;
 
 import org.springframework.boot.context.properties.ConfigurationProperties;
 
-@ConfigurationProperties(prefix = "smartlink.redirection.pages")
+@ConfigurationProperties(prefix = "smart-link.redirection.pages")
 public record RedirectionPageConfigs(
                 String errorPage,
                 String trackPage,
