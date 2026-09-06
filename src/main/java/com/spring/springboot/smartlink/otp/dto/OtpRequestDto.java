@@ -1,4 +1,4 @@
-package com.spring.springboot.smartlink.dto.requestDtos;
+package com.spring.springboot.smartlink.otp.dto;
 
 import jakarta.validation.constraints.Email;
 import lombok.AllArgsConstructor;

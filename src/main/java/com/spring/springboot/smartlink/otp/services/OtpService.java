@@ -1,9 +1,9 @@
-package com.spring.springboot.smartlink.services;
+package com.spring.springboot.smartlink.otp.services;
 
-import com.spring.springboot.smartlink.email.contentbuilder.EmailContentBuilder;
-import com.spring.springboot.smartlink.email.dto.EmailBody;
 import com.spring.springboot.smartlink.email.services.EmailService;
-import lombok.RequiredArgsConstructor;
+import com.spring.springboot.smartlink.configurations.ExceptionMessages;
+import com.spring.springboot.smartlink.redis.services.RedisService;
+
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
@@ -15,13 +15,21 @@ import java.util.Base64;
 
 @Slf4j
 @Service
-@RequiredArgsConstructor
 public class OtpService {
-
 
     private final RedisService redisService;
     private final EmailService emailService;
-    private final EmailContentBuilder emailContentBuilder;
+    private final ExceptionMessages exceptionMessages;
+
+    public OtpService(
+            RedisService redisService,
+            EmailService emailService,
+            ExceptionMessages exceptionMessages) {
+
+        this.redisService = redisService;
+        this.emailService = emailService;
+        this.exceptionMessages = exceptionMessages;
+    }
 
     public void sendOtp(String email) {
         String generatedOtp = generateFourLengthNumericOtp();
@@ -29,18 +37,13 @@ public class OtpService {
 
         redisService.saveOTP(email, hashedOtp);
 
-        EmailBody otpToEmail = emailContentBuilder.otpContent(
-                email,
-                generatedOtp);
-
-        emailService.sendEmail(otpToEmail);
+        emailService.sendOtpEmail(email, generatedOtp);
     }
 
-
-    public boolean isValidOtp(String email, String otp){
+    public boolean isInvalidOtp(String email, String otp) {
         String hashedOtpToPass = hashOtp(otp);
 
-        return redisService.isValidOtp(email, hashedOtpToPass);
+        return redisService.isInvalidOtp(email, hashedOtpToPass);
     }
 
     private String generateFourLengthNumericOtp() {
@@ -59,9 +62,8 @@ public class OtpService {
             byte[] hashBytes = digest.digest(otp.getBytes(StandardCharsets.UTF_8));
             return Base64.getEncoder().encodeToString(hashBytes);
         } catch (NoSuchAlgorithmException e) {
-            log.error("Something went wrong while hashing the OTP. Exception: {}", e.getMessage());
             log.error("OTP hashing failed because SHA-256 algorithm was unavailable", e);
-            throw new IllegalStateException("SHA-256 not available");
+            throw new IllegalStateException(exceptionMessages.sha256Unavailable());
         }
     }
 }
