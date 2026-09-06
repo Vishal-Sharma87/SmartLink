@@ -1,460 +1,197 @@
 # SmartLink
 
-**A verdict-aware URL shortening backend** — built on Spring Boot, with authenticated link ownership, external threat scanning, async analytics, and abuse-reporting workflows.
-
-`Java 21` · `Spring Boot 3.4.10` · `MongoDB 7` · `Redis 7.4` · `Apache Kafka 3.9` · `JWT` · `VirusTotal API` · `Brevo SMTP`
-
----
-
-## Table of Contents
-
-- [Objective](#objective)
-- [Features](#features)
-- [Architecture](#architecture)
-- [Lifecycle Walkthroughs](#lifecycle-walkthroughs)
-  - [Link Creation](#link-creation)
-  - [Redirection and Tracking](#redirection-and-tracking)
-  - [Abuse Reports](#abuse-reports)
-  - [Signup and Authentication](#signup-and-authentication)
-- [Kafka](#kafka)
-- [Redis](#redis)
-- [VirusTotal Analysis](#virustotal-analysis)
-- [Email Integration](#email-integration)
-- [System Components and Data](#system-components-and-data)
-- [Security](#security)
-- [Technology Stack and Project Structure](#technology-stack-and-project-structure)
-- [Local Setup and Configuration](#local-setup-and-configuration)
-- [REST API](#rest-api)
-- [Testing and Verification](#testing-and-verification)
-- [Design Decisions](#design-decisions)
-  - [Redis Counter Plus Base62](#decision-redis-counter-plus-base62)
-  - [Direct Redirect Hash Fields](#decision-direct-redirect-hash-fields)
-  - [Service-Owned Redirect Behavior](#decision-service-owned-redirect-behavior)
-  - [Kafka Workflow Boundaries](#decision-kafka-workflow-boundaries)
-  - [Atomic One-Time OTP Use](#decision-atomic-one-time-otp-use)
-- [Reliability and Limitations](#reliability-and-limitations)
-- [Future Improvements](#future-improvements)
+SmartLink is a verdict-aware URL shortener. A short URL is not merely a lookup: it must allocate a compact identifier safely under concurrent creation, avoid making a click wait for analysis work, and give a visitor a safety decision before sending them to an unknown destination.
 
----
+The application is a Spring Boot monolith with a Thymeleaf/vanilla-JS UI. MongoDB is the durable store; Redis handles atomic allocation, redirect-state lookup, and expiring OTP state; Kafka moves slow scanning and analytics work off the request path.
 
-## Objective
+## The request paths that matter
 
-A short URL service must do more than map a short code to a destination. It must allocate identifiers safely under concurrent creation, keep ownership boundaries clear, avoid blocking redirect requests on analytics work, and give users a safety decision before navigating to a destination.
+| Workflow            | Request-facing work                                                                                                | Deferred or follow-up work                                                                                                                         |
+| ------------------- | ------------------------------------------------------------------------------------------------------------------ | -------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Async link creation | Allocate a Redis counter, Base62-encode it, build a short URL, publish `LinkCreationPayload`, return `202 PENDING` | Consumer scans with VirusTotal, persists the link, and sends email                                                                                 |
+| Sync link creation  | Allocate, scan, persist, return `201 ACTIVE`                                                                       | None; the caller waits for scanning                                                                                                                |
+| Public redirect     | Read the two-field redirect cache; fall back to MongoDB and refill it                                              | Render the verdict-specific page                                                                                                                   |
+| Click tracking      | Accept browser data at `POST /api/track`, publish `LinkAnalysisPayload`, return `204`                              | Consumer increments clicks, looks up IP data, classifies device/browser/OS, and persists analytics                                                 |
+| Abuse report        | Validate and consume OTP, reject an existing reporter/hash pair, return `202`                                      | Async worker increments report count, may switch verdict to `PENDING_REVERIFICATION`, invalidates redirect cache, persists report, emails reporter |
 
-SmartLink combines authenticated link ownership, compact links, external threat analysis, verdict-aware navigation, click-context analytics, and abuse reporting. MongoDB is the durable application store; Redis supplies atomic allocation, OTP state, and a fast redirect representation; Kafka separates slow analysis workflows from user-facing requests.
+The asynchronous creation path intentionally returns before VirusTotal and persistence complete: the consumer owns those slower external and database operations. The synchronous endpoint remains available for callers that explicitly need the completed result in the request.
 
-> **Scope note:** The repository also contains a server-rendered Thymeleaf UI used to exercise the backend. The engineering scope described in this document is the backend and its supporting infrastructure — the UI is not treated as an architectural contribution.
+## How the main pieces work
 
-[⬆ back to top](#table-of-contents)
+### Link allocation and storage
 
----
+Redis seeds `url_counter` and allocates identifiers with `INCR`; `Base62` converts that number into a compact public code. `INCR` is atomic, so concurrent create requests do not need an application-level lock to obtain distinct IDs. The code also rejects a decoded value beyond the last allocated counter before attempting a link lookup, avoiding work for impossible future identifiers.
 
-## Features
+MongoDB stores the durable `Link`, its verdict, counts, and owner. Link reads used by the dashboard are owner-scoped; the public redirect path instead resolves by short hash because it must work without authentication.
 
-| Category        | Capability                                                                                                             |
-| --------------- | ---------------------------------------------------------------------------------------------------------------------- |
-| Link management | Authenticated creation, listing, detail lookup, deletion, and scan-detail lookup                                       |
-| ID allocation   | Redis `INCR` allocation followed by reversible Base62 encoding                                                         |
-| Link creation   | Asynchronous and synchronous creation endpoints                                                                        |
-| Threat scanning | VirusTotal submission, polling, ratio-based verdict evaluation, persisted scan matrices                                |
-| Navigation      | Verdict-aware pages — safe links proceed through tracking, uncertain links show a warning, malicious links are blocked |
-| Event pipeline  | Kafka-backed link creation and click-analysis workflows                                                                |
-| Analytics       | Browser/user-agent, viewport, timezone, IP, country, continent, browser, OS, and device tracking                       |
-| Abuse handling  | OTP-protected signup and abuse reporting with one-time Redis/Lua validation                                            |
-| Auth            | JWT authentication with BCrypt password storage                                                                        |
-| Notifications   | Brevo email delivery for OTP, welcome, link-created, malicious-link, and successful-report events                      |
-| Data integrity  | MongoDB atomic report-count updates and threshold transition to `PENDING_REVERIFICATION`                               |
+### Verdict-aware navigation
 
-[⬆ back to top](#table-of-contents)
+`RedirectService` reads a Redis Hash named from `redirection-cache-prefix + shortCode`. It stores only `longUrl` and `status`, the two values required to decide where and how to continue. On a cache miss or incomplete hash it loads MongoDB, repopulates the Hash, and then chooses a view:
 
----
+| Verdict                                              | Result                                              |
+| ---------------------------------------------------- | --------------------------------------------------- |
+| `SAFE`                                               | `track.html`, which queues analytics then redirects |
+| `SUSPICIOUS`, `UNVERIFIED`, `PENDING_REVERIFICATION` | `suspicious-warning.html`                           |
+| `MALICIOUS`                                          | `malicious-warning.html`                            |
 
-## Architecture
+The confirmation route always resolves the destination and returns the tracking page after a visitor elects to continue. Redis caches the narrow redirect representation rather than a serialized link DTO because the lookup consumes only these two fields.
 
-```text
-HTTP client / Thymeleaf UI
-              |
-              v
-       Spring MVC controllers
-              |
-              +--> application services
-              |       +--> MongoDB repositories / MongoTemplate
-              |       +--> RedisService
-              |       +--> Kafka producers
-              |       +--> Brevo EmailService (WebClient)
-              |
-              +--> public verdict-aware pages
-                           |
-                           +--> Kafka click-analysis event
+### Asynchronous scanning and analytics
 
-smart_link_link_creation
-              |
-              v
-ConsumerLinkCreationEvent --> VirusTotal --> MongoDB link + scan matrix
-                                      \--> Brevo notification
+`EventPublisher` is the one application publish path. It publishes a link-creation payload to the configured creation topic and a tracking payload to the configured analysis topic. Each listener declares its own group ID while sharing the same configured consumer factory; the group belongs to the listener because that factory serves both flows.
 
-smart_link_existed_link_analysis
-              |
-              v
-ConsumerExistedLinkAnalysisEvent --> IPInfo/user-agent classification --> MongoDB analytics
-```
+`LinkCreationConsumer` blocks only in the consumer while waiting for VirusTotal, saves the resulting `Link`, and sends either a normal link-created message or a malicious-link message. `VirusTotalService` polls every five seconds for a completed analysis, caps a scan at two minutes, and falls back to `UNVERIFIED` on errors. `VerdictEvaluationService` persists the raw scan ratios and reason alongside the derived verdict.
 
-Controllers extract request data, authenticated identity, and page/API concerns. Services own business workflows such as link allocation, ownership checks, redirect-state lookup, OTP validation, report acceptance, account deletion, scanning, and notification composition. Redirect and tracking controllers delegate rather than assembling domain behavior themselves.
+`LinkAnalysisConsumer` first increments the link click count. If the link cannot be resolved, it drops the event rather than persisting orphaned analytics. Otherwise it enriches the browser payload with IPInfo data and device classification, then saves a `LinkInformation` record. This lets the browser leave immediately rather than wait for enrichment.
 
-[⬆ back to top](#table-of-contents)
+### OTPs, reporting, and notifications
 
----
+`OtpService` generates a four-digit value with `SecureRandom`, hashes it with SHA-256/Base64, and stores it in Redis for ten minutes. Validation uses one Lua script that compares the stored digest and deletes the key only when it matches. Combining compare and delete in Redis makes a successfully used OTP one-time even when requests race.
 
-## Lifecycle Walkthroughs
+Report acceptance validates the OTP first, then checks for a prior report from the same email for the same short code before enqueueing `AsyncReportService`. The worker uses MongoDB `findAndModify` with `$inc` to obtain the new report count atomically. At three reports it changes the link to `PENDING_REVERIFICATION` and removes its redirect cache entry, so subsequent redirects must resolve the newer durable state.
 
-### Link Creation
+Email creation is separated into content construction, delivery service, and Brevo provider call. OTP, welcome, link-created, malicious-link, and report-accepted flows all reuse that path; provider failures are logged rather than returned to the initiating request.
 
-`POST /link/create` obtains the next `url_counter` value from Redis, encodes it with `Base62`, builds the configured `COMPANY_ENDPOINT` URL, and publishes `LinkCreationDto` to `smart_link_link_creation`. It returns `202 Accepted` with `PROCESSING`; the MongoDB `Link` does not exist yet.
+## Configuration and local setup
 
-`ConsumerLinkCreationEvent` extracts the hash, decodes it to the numeric ID, fetches the owner, blocks on the VirusTotal `Mono`, builds and saves the `Link`, and sends the appropriate Brevo notification. A malicious verdict also increments the owner's malicious-link count.
+`application.yml` imports an optional root `.env` file (`optional:file:.env[.properties]`). Spring scans `@ConfigurationProperties` records, so connection details, keys, message text, and provider credentials are externalized instead of scattered as literals.
 
-`POST /link/create/sync` performs allocation, VirusTotal scanning, and persistence in the request thread and returns `201 Created`. Scanner latency is consequently part of request latency.
-
-### Redirection and Tracking
-
-Public `GET /{hash}` first rejects a decoded counter greater than the latest Redis counter. `RedirectService` reads `longUrl` and `status` from `smart-link:redirection-hash:<hash>`. On a miss it loads MongoDB and populates the Hash. It renders:
-
-| Verdict                                              | Page rendered             |
-| ---------------------------------------------------- | ------------------------- |
-| `SAFE`                                               | `track.html`              |
-| `SUSPICIOUS`, `UNVERIFIED`, `PENDING_REVERIFICATION` | `suspicious-warning.html` |
-| `MALICIOUS`                                          | `malicious-warning.html`  |
-
-The tracking page posts browser telemetry to `POST /api/track`. `AnalysisService` adds the client IP and publishes `LinkAnalysisDto`; the browser continues to the destination without waiting for Kafka or analytics persistence. `GET /api/confirm/{shortCode}` delegates the same service-owned redirect-state preparation for the warning-page Proceed flow.
-
-The analysis consumer resolves the link, looks up IPInfo Lite data, classifies browser/operating system/device, increments the click count, and saves a `LinkInformation` document. The click-count and click-detail writes are separate.
-
-### Abuse Reports
-
-1. `POST /verify/generate-otp` generates a four-digit OTP, hashes it with SHA-256/Base64, stores the digest under the email key in Redis for ten minutes, and sends the plaintext OTP through Brevo.
-2. `POST /report-abuse` validates and consumes the OTP with a Redis Lua script, extracts the final short-code path segment, and rejects an existing report from the same reporter email for that hash.
-3. `ReportLinkService` queues `AsyncReportService.acceptReport`; the controller returns before asynchronous work completes.
-4. The async service atomically increments `reportCount` with MongoDB `findAndModify`, changes the link to `PENDING_REVERIFICATION` at count three or higher, removes the redirect Hash, saves `AbuseReport`, and sends a successful-report email to the reporter.
-
-> There is currently no owner-notification call in this flow, no human moderation queue, and no automatic VirusTotal re-scan after reporting.
-
-### Signup and Authentication
-
-The current two-step flow is `POST /auth/signup/initiate` (username check, OTP delivery, and HTTP-session storage) followed by `POST /auth/signup/verify` (session retrieval, OTP consumption, BCrypt user save, welcome email, and pending-session removal). The backend also retains `POST /auth/signup`, which accepts signup fields and an OTP in one request but does not send the welcome email in `registerUser`.
-
-`POST /auth/login` authenticates through Spring Security and returns a ten-minute HMAC-signed JWT in `AuthResponseDto.data`. Protected requests use `Authorization: Bearer <token>`; link and account operations obtain the username from the authenticated security context.
-
-[⬆ back to top](#table-of-contents)
-
----
-
-## Kafka
-
-The application defines two domain-specific producer/consumer pairs. Topics are not declared as `NewTopic` beans or in Compose, so broker auto-creation must be enabled or topics must be provisioned separately.
-
-### `smart_link_link_creation`
-
-- **Producer:** `LinkService`
-- **Consumer / Group:** `ConsumerLinkCreationEvent` / `link-creation-group`
-- **Payload:** `LinkCreationDto`
-- **Responsibility:** VirusTotal scan, link persistence, creation notification
-
-### `smart_link_existed_link_analysis`
-
-- **Producer:** `AnalysisService`
-- **Consumer / Group:** `ConsumerExistedLinkAnalysisEvent` / `link-analysis-group`
-- **Payload:** `LinkAnalysisDto`
-- **Responsibility:** IP/user-agent enrichment, click increment, analytics persistence
-
-### Delivery and Reliability Notes
-
-Producers call `KafkaTemplate.send(topic, value)` without a key, so no application-defined key-partitioning strategy is present. JSON deserialization is restricted to `com.spring.springboot.smartlink.model` with explicit default payload types. Both listener factories use `DefaultErrorHandler` with two retries and a one-second fixed backoff. There is no DLT, outbox, event ID, producer-result handling, or consumer deduplication. Abuse reports use Spring `@Async` and the configured five-core/ten-maximum executor with queue capacity 100; they do not use Kafka.
-
-[⬆ back to top](#table-of-contents)
-
----
-
-## Redis
-
-`RedisService` uses `StringRedisTemplate` operations directly for the active data paths:
-
-| Key / Data Structure                        | Fields / Operation        | Purpose                                             |
-| ------------------------------------------- | ------------------------- | --------------------------------------------------- |
-| `url_counter` (string)                      | `INCR`                    | Atomic ID allocation and upper-bound validation     |
-| `smart-link:redirection-hash:<hash>` (Hash) | `longUrl`, `status`       | Fast redirect lookup; status is `Verdict.name()`    |
-| `<email>` (string, TTL)                     | SHA-256/Base64 OTP digest | Signup/report OTP state, expiring after ten minutes |
-
-Redirect reads use Hash `multiGet` and fall back to MongoDB when the Hash is missing or incomplete. The Hash is removed when abuse reports move a link to pending reverification. Redirect Hashes have no configured TTL, so they can remain stale unless invalidated explicitly. MongoDB remains the durable source.
-
-Repository history records an earlier cache-DTO/JSON-value representation. The current redirect path stores the two required fields directly in a Hash, removing the link-cache object's JSON conversion/deserialization from that path. `RedisConfig` still declares a generic JSON-serializer `RedisTemplate`; the service paths use the Spring-provided `StringRedisTemplate`, so this is not a claim that every Redis operation is globally JSON-free.
-
-OTP validation is one Lua operation: compare the supplied digest and delete the key only on success. This prevents concurrent reuse of a valid OTP.
-
-> Enum classes no longer use Lombok `@ToString`. Where reconstruction uses `Enum.valueOf`, code passes `name()` (for example `Verdict.name()` into Redis). `toString()` is not treated as a persistence contract.
-
-[⬆ back to top](#table-of-contents)
-
----
-
-## VirusTotal Analysis
-
-`VirusTotalService` submits the URL with a WebClient form request, obtains the analysis self-link, polls every five seconds until the provider reports `completed`, and times out after two minutes. Errors and timeout become `UNVERIFIED`.
-
-`VerdictEvaluationService` persists ratios and the reason in `link_scan_matrices`:
-
-| Rule                                                     | Verdict      |
-| -------------------------------------------------------- | ------------ |
-| No returned engine signals                               | `UNVERIFIED` |
-| Malicious ratio > 5%, or any malicious/suspicious result | `MALICIOUS`  |
-| Harmless ratio ≥ 50% and timeout ratio < 20%             | `SAFE`       |
-| Undetected ratio > 60% or timeout ratio > 40%            | `UNVERIFIED` |
-| Otherwise                                                | `SUSPICIOUS` |
-
-[⬆ back to top](#table-of-contents)
-
----
-
-## Email Integration
-
-Email behavior is separated into `EmailContentBuilder`, `EmailService`, and `EmailProvider`. The builder creates `EmailBody` DTOs containing sender, recipient, subject, and HTML content; the provider posts them to the configured Brevo SMTP endpoint with the `api-key` header using WebClient and calls `.block()`.
-
-Delivery is synchronous inside its caller: link-creation delivery occurs inside the Kafka consumer, OTP and welcome delivery in the HTTP request path, and report confirmation inside the `@Async` report executor. No email-specific Kafka topic exists. `EmailProvider` catches and logs exceptions, so delivery failures are not propagated as failed API responses or listener failures.
-
-| Flow              | Origin                                        | DTO / Template Data                               |
-| ----------------- | --------------------------------------------- | ------------------------------------------------- |
-| OTP               | `OtpService.sendOtp`                          | recipient email, generated OTP                    |
-| Welcome           | `AuthService.completeSignup`                  | username and email                                |
-| New link created  | `ConsumerLinkCreationEvent` after scan/save   | username, email, original URL, short URL, verdict |
-| Malicious link    | same consumer, for `MALICIOUS`                | username, email, original URL, short URL          |
-| Successful report | `AsyncReportService` after report persistence | reporter name/email and submitted link URL        |
-
-> The current code does not send a "link reported" notification to the link owner; no owner lookup plus owner-email call exists in the report path. Subjects, sender name/email, Brevo base URL, and API key are injected from environment-backed `application.yml` properties.
-
-[⬆ back to top](#table-of-contents)
-
----
-
-## System Components and Data
-
-Controllers: `AuthController`, `OtpController`, `UserController`, `LinkController`, `RedirectionController`, `IntermediateRedirectingController`, `AnalyticsController`, `ReportLinkController`, `UiController`.
-
-Application services cover link/persistence, redirect state, analytics, threat scanning, identity, reporting, and email. Kafka consumers are `ConsumerLinkCreationEvent` and `ConsumerExistedLinkAnalysisEvent`.
-
-| MongoDB Collection   | Entity             | Main Responsibility                                     |
-| -------------------- | ------------------ | ------------------------------------------------------- |
-| `users`              | `User`             | credentials, roles, creation date, malicious-link count |
-| `links`              | `Link`             | ID, destination, hash, owner, verdict, reports, clicks  |
-| `link_scan_matrices` | `LinkScanResponse` | scan ratios, verdict/reason, source URL, analysis time  |
-| `link_analytics`     | `LinkInformation`  | click time, IP/geo data, timezone, browser, OS, device  |
-| `link_reports`       | `AbuseReport`      | reporter, causes, description, hash, status, timestamp  |
-
-MongoDB auto-index creation is enabled. User username/email, link owner, and analytics short hash have indexes. The duplicate-report check is a read followed by async work and is not enforced by a unique compound index.
-
-[⬆ back to top](#table-of-contents)
-
----
-
-## Security
-
-- Passwords use **BCrypt**.
-- JWTs contain subject/name, issued-at, and expiration claims and **expire after ten minutes**.
-- `JwtFilter` authenticates bearer tokens and loads authorities.
-- `/user/**` requires `ROLE_USER`; seven-alphanumeric root short-code GETs are public.
-- Authentication, OTP, reporting, public pages, static resources, and `/api/**` are permitted according to `UrlSecurityConfig`.
-- CSRF is disabled; there is no token refresh or server-side revocation endpoint.
-
-[⬆ back to top](#table-of-contents)
-
----
-
-## Technology Stack and Project Structure
-
-**Stack:** Java 21 · Spring Boot 3.4.10 · Maven Wrapper · Spring MVC/WebFlux · Validation · Security · Thymeleaf · Data MongoDB · Data Redis · Spring Kafka · MongoDB 7 · Redis 7.4 Alpine · Apache Kafka 3.9 · JJWT 0.12.5 · Lombok · IPInfo API 3.4.0 · VirusTotal API · Brevo SMTP API
-
-```text
-SmartLink/
-├── docker-compose.yml / pom.xml / .env.example
-└── src/
-    ├── main/java/com/spring/springboot/smartlink/
-    │   ├── advices/ configurations/ controllers/ dto/
-    │   ├── email/ entity/ enums/ filter/ kafka/ model/
-    │   ├── repositories/ scripts/ services/
-    └── main/resources/application.yml, static/, templates/
-```
-
-[⬆ back to top](#table-of-contents)
-
----
-
-## Local Setup and Configuration
-
-**Prerequisites:** JDK 21, Docker Engine/Compose, and credentials for the external services.
+| Area                                   | Bound records                                                                                                    |
+| -------------------------------------- | ---------------------------------------------------------------------------------------------------------------- |
+| Link, response, and exception settings | `ApplicationConfigs`, `ResponseMessage`, `ExceptionMessages`, `LinkKeys`, `UserKeys`, `AbuseReportKeys`          |
+| Infrastructure                         | `RedisConnectionConfigs`, `RedisKeys`, `ConnectionConfigs`, `KafkaProducerConfigs`, `KafkaTopics`                |
+| External/security services             | `VirusTotalConfigs`, `IpInfoConfigs`, `JwtConfigs`, `EmailProviderConfigs`, `EmailSenderConfigs`, `EmailSubject` |
+| MVC page names                         | `RedirectionPageConfigs`                                                                                         |
 
 ```bash
 cp .env.example .env
-# Replace provider placeholders and CHANGE_ME values.
+# Replace CHANGE_ME values and provider credentials.
 docker compose up -d mongodb redis kafka
-bash mvnw spring-boot:run
+mvn spring-boot:run
 ```
 
-Or build a runnable jar:
+`.env.example` documents every required variable, including `MONGODB_URI`, Redis/Kafka connection values, `COMPANY_ENDPOINT`, JWT settings, VirusTotal/IPInfo credentials, Brevo credentials, message text, and Docker image/port values. Do not commit a populated `.env` file.
 
-```bash
-bash mvnw clean package
-java -jar target/smartlink-0.0.1-SNAPSHOT.jar
+## API contract
+
+Successful JSON endpoints generally wrap their concrete body in:
+
+```json
+{
+  "data": "<endpoint-specific value>",
+  "timestamp": "<ISO-8601 Instant>"
+}
 ```
 
-`application.yml` imports `.env` optionally. Compose service names are `mongodb`/`smart-link-mongodb`, `redis`/`smart-link-redis`, and `kafka`/`smart-link-kafka`. Compose does not declare application topics.
+For example, `POST /link/create` returns `202 Accepted` with an `ApiResponse<LinkCreationResponseDto>`:
 
-| Area                 | Variables                                                                                                                                                                          |
-| -------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| MongoDB              | `MONGODB_URI`, `MONGODB_DATABASE`, `MONGODB_IMAGE_TAG`, `MONGODB_PORT`                                                                                                             |
-| Redis                | `REDIS_HOST`, `REDIS_PORT`, `REDIS_IMAGE_TAG`                                                                                                                                      |
-| Kafka client/Compose | `KAFKA_BOOTSTRAP_SERVERS`, security/SASL/session variables, serializer/deserializer variables, `KAFKA_CONSUMER_GROUP_ID`, `KAFKA_IMAGE_TAG`, `KAFKA_PORT`, `KAFKA_ADVERTISED_HOST` |
-| Link/JWT             | `COMPANY_ENDPOINT`, `JWT_SECRET_KEY`                                                                                                                                               |
-| VirusTotal/IPInfo    | `VT_API_KEY`, `VT_ANALYSIS_URL`, `IP_INFO_TOKEN`                                                                                                                                   |
-| Brevo                | `EMAIL_PROVIDER_BASE_URL`, `EMAIL_PROVIDER_API_KEY`, `SENDER_NAME`, `SENDER_EMAIL`, and the five `EMAIL_*_SUBJECT` variables                                                       |
-
-[⬆ back to top](#table-of-contents)
-
----
-
-## REST API
-
-**Base URL:** `http://localhost:8080`
-
-| Method         | Endpoint                                                      | Access                       | Purpose                                  |
-| -------------- | ------------------------------------------------------------- | ---------------------------- | ---------------------------------------- |
-| POST           | `/auth/signup`                                                | Public                       | Single-request signup with OTP           |
-| POST           | `/auth/signup/initiate`                                       | Public                       | Begin session-backed signup and send OTP |
-| POST           | `/auth/signup/verify`                                         | Pending signup session       | Verify OTP and create account            |
-| POST           | `/auth/login`                                                 | Public                       | Authenticate and return JWT in `data`    |
-| POST           | `/verify/generate-otp`                                        | Public                       | Generate/store/send an OTP               |
-| POST           | `/link/create`                                                | Authenticated                | Queue link creation; `202`               |
-| POST           | `/link/create/sync`                                           | Authenticated                | Scan/save synchronously; `201`           |
-| GET            | `/link/`                                                      | Authenticated                | List owned links                         |
-| GET            | `/link/{hash}`                                                | Authenticated                | Get one owned link                       |
-| DELETE         | `/link/{hash}`                                                | Authenticated                | Delete one owned link                    |
-| DELETE         | `/link/`                                                      | Authenticated                | Delete all owned links                   |
-| GET            | `/link/debug/verdict/{shortCode}`                             | Authenticated                | Get persisted scan details               |
-| GET            | `/{hash}`                                                     | Public, 7 alphanumeric chars | Verdict-aware navigation                 |
-| GET            | `/api/confirm/{shortCode}`                                    | Public                       | Warning-page confirmation flow           |
-| POST           | `/api/track`                                                  | Public                       | Queue click telemetry                    |
-| GET            | `/analytics/link?shortHash=...`                               | Authenticated                | Summarize analytics                      |
-| POST           | `/report-abuse`                                               | Public                       | Validate OTP and queue a report          |
-| GET/PUT/DELETE | `/user`, `/user/update-user-credentials`, `/user/delete-user` | `ROLE_USER`                  | User health, update, deletion            |
-
-Creation requests contain `actualUrl`. Tracking requests contain `shortHash`, `screenWidth`, `viewportWidth`, `userAgent`, and `timezone`. Link list responses use `LinkQueryResponseDto`; domain errors use `ApiError` with timestamp, message, and error code.
-
-[⬆ back to top](#table-of-contents)
-
----
-
-## Testing and Verification
-
-The checked-in automated tests are a Spring context smoke test and a JSON-shape test for `EmailBody`. The context test requires configured infrastructure reachable during startup; the JSON test does not call Brevo because its HTTP test block is commented out.
-
-```bash
-bash mvnw test
+```json
+{
+  "data": {
+    "message": "Link creation is pending analysis.",
+    "status": "PENDING",
+    "shortUrl": "<COMPANY_ENDPOINT>/<Base62 short code>"
+  },
+  "timestamp": "<creation time>"
+}
 ```
 
-**Manual walkthrough:** start MongoDB/Redis/Kafka → complete signup and login → create a link → wait for the creation consumer and VirusTotal result → open the short URL → inspect analytics after tracking → submit an OTP-protected report.
+Domain and authentication failures are different: `GlobalExceptionHandler` returns `ApiError` with `timestamp`, `message`, `code`, and `httpStatus`. Not every endpoint uses the success envelope—`DELETE /link/` and `GET /user` return plain strings, `POST /verify/generate-otp` is empty, and MVC navigation routes return views.
 
-Useful inspection commands:
+| Method | Endpoint                          | Result                                                    |
+| ------ | --------------------------------- | --------------------------------------------------------- |
+| POST   | `/auth/signup`                    | `ApiResponse<AuthResponse>`: `token`, `message`           |
+| POST   | `/auth/login`                     | `ApiResponse<AuthResponse>`: `token`, `message`           |
+| POST   | `/auth/signup/initiate`           | `ApiResponse<SignupInitiateResponse>`: `email`, `message` |
+| POST   | `/auth/signup/verify`             | `ApiResponse<AuthResponse>`: `token`, `message`           |
+| POST   | `/verify/generate-otp`            | `200 OK`, empty body                                      |
+| POST   | `/link/create`                    | `202`, `ApiResponse<LinkCreationResponseDto>`             |
+| POST   | `/link/create/sync`               | `201`, `ApiResponse<LinkCreationResponseDto>`             |
+| GET    | `/link/`                          | `ApiResponse<LinkQueryResponseDto>`: `links`, `message`   |
+| GET    | `/link/{hash}`                    | `ApiResponse<LinkAsResponseDto>`                          |
+| DELETE | `/link/{hash}`                    | `ApiResponse<String>`                                     |
+| DELETE | `/link/`                          | plain `String`                                            |
+| GET    | `/link/debug/verdict/{shortCode}` | `ApiResponse<LinkScanResponse>`                           |
+| GET    | `/analytics/link?shortHash=...`   | `ApiResponse<LinkAnalyticsResponseDto>`                   |
+| POST   | `/report-abuse/`                  | `202`, `ApiResponse<String>`                              |
+| GET    | `/user` or `/user/`               | plain `Working` string                                    |
+| DELETE | `/user/delete-user`               | `ApiResponse<String>`                                     |
+| POST   | `/api/track`                      | `204 No Content`                                          |
+| GET    | `/{hash}`                         | verdict-selected Thymeleaf view                           |
+| GET    | `/api/confirm/{shortCode}`        | tracking-page view after confirmation                     |
 
-```bash
-docker compose logs kafka
-docker exec smart-link-redis redis-cli HGETALL smart-link:redirection-hash:<hash>
+Protected link, analytics, and user endpoints require a Bearer JWT. Public short-code redirects are limited by the configured seven-alphanumeric-character matcher.
+
+## Project layout
+
+The package structure follows features rather than global technical buckets:
+
+```text
+com.spring.springboot.smartlink/
+├── analytics/      controller, DTO, entity, repository, services
+├── link/           controller, DTOs, entity, repository, services, keys
+├── user/           authentication plus user controller, entities, repositories, services
+├── redirection/    controllers, tracking DTO, redirect service
+├── redis/          configuration, keys, hash/value repositories, Lua scripts, service
+├── kafka/          configuration, payloads, consumers, publisher
+├── report/         controller, DTO, entity, repository, services, keys
+├── email/          configuration, content builder, DTOs, provider/service
+├── jwt/, geoip/, virustotal/, otp/
+├── apiresponse/, advices/, configurations/
+└── utils/
 ```
 
-[⬆ back to top](#table-of-contents)
+This puts a feature's controller, persistence code, and service behavior near each other, while keeping cross-cutting exception, shared response, and application configuration code explicit.
 
----
+## Engineering decisions
 
-## Design Decisions
+### Redis `INCR` plus Base62 instead of application-generated short codes
 
-### Decision: Redis Counter Plus Base62
+The numeric source is allocated atomically by Redis, then encoded for a shorter public path. That gives concurrency-safe allocation with a reversible code used for both lookup and counter-bound validation. The tradeoff is that codes are predictable identifiers, not secrets, and Redis counter continuity matters.
 
-|               |                                                                                                            |
-| ------------- | ---------------------------------------------------------------------------------------------------------- |
-| **Problem**   | Concurrent creation needs a unique persistent ID and compact public representation.                        |
-| **Decision**  | Allocate with Redis `INCR`, reuse the number as MongoDB ID, and encode it with Base62.                     |
-| **Why**       | Increment is atomic and encoding is reversible for lookups and upper-bound validation.                     |
-| **Trade-off** | Redis availability and counter continuity affect creation; codes are predictable identifiers, not secrets. |
-| **Result**    | Async and sync creation share one allocation scheme.                                                       |
+### A two-field Redis Hash instead of caching a link DTO
 
-### Decision: Direct Redirect Hash Fields
+Redirects need only the destination and verdict. Storing `longUrl` and `status` directly matches the read path and avoids serializing/deserializing unrelated link fields. The tradeoff is explicit invalidation: redirect hashes have no TTL and can remain stale until a flow removes or replaces them.
 
-|               |                                                                                               |
-| ------------- | --------------------------------------------------------------------------------------------- |
-| **Problem**   | Redirect decisions need only destination and verdict, while a cache DTO adds conversion work. |
-| **Decision**  | Store `longUrl` and `status` directly in a Redis Hash and reconstruct with `Verdict.valueOf`. |
-| **Why**       | The shape matches redirect reads and keeps enum representation stable.                        |
-| **Trade-off** | Invalidation is explicit and redirect entries have no TTL.                                    |
-| **Result**    | Redirect reads avoid cache-DTO JSON conversion and fall back to MongoDB on a miss.            |
+### Kafka for slow workflows, not a blanket replacement for HTTP
 
-### Decision: Service-Owned Redirect Behavior
+The create request publishes then returns, and click tracking returns `204` after publishing. VirusTotal polling and analytics enrichment therefore happen away from the caller. The synchronous create endpoint is deliberately retained, showing the opposite tradeoff: immediate completion at the cost of request latency.
 
-|               |                                                                                                      |
-| ------------- | ---------------------------------------------------------------------------------------------------- |
-| **Problem**   | Redirect controllers contained cache lookup, MongoDB fallback, model population, and page selection. |
-| **Decision**  | Move that behavior into `RedirectService`; tracking publication is delegated to `AnalysisService`.   |
-| **Why**       | Business/integration behavior is reusable independently of MVC entry points.                         |
-| **Trade-off** | The service still knows Thymeleaf model/page names.                                                  |
-| **Result**    | Endpoint paths remain stable while controller methods are smaller.                                   |
+### Shared Kafka infrastructure with listener-owned groups
 
-### Decision: Kafka Workflow Boundaries
+Both consumers use one `KafkaTemplate`, one consumer factory, and one listener factory with a JSON converter and a fixed retry policy. Topic-specific group IDs remain on `@KafkaListener`, which lets the common factory serve both distinct consumer groups without duplicating connection configuration.
 
-|               |                                                                                     |
-| ------------- | ----------------------------------------------------------------------------------- |
-| **Problem**   | VirusTotal polling and click enrichment are slow and external-service dependent.    |
-| **Decision**  | Use separate topics and consumer groups for creation and existing-link analysis.    |
-| **Why**       | Requests can hand off slow work and return.                                         |
-| **Trade-off** | Persistence is eventually consistent and not exactly-once at the application level. |
-| **Result**    | Creation returns `PROCESSING`, and navigation does not wait for analytics.          |
+### Typed errors with a shared response writer
 
-### Decision: Atomic One-Time OTP Use
+Each domain exception carries an `ErrorCode`; the advice maps that code to the HTTP status and emits one `ApiError` shape. The concrete exception still names the domain failure, while HTTP mapping stays centralized. The current API deliberately keeps error and success shapes separate rather than placing error fields in `ApiResponse<T>`.
 
-|               |                                                                     |
-| ------------- | ------------------------------------------------------------------- |
-| **Problem**   | Separate OTP read/compare/delete operations allow concurrent reuse. |
-| **Decision**  | Compare and delete in one Redis Lua script, with a ten-minute TTL.  |
-| **Why**       | Redis executes the sequence atomically.                             |
-| **Trade-off** | Correctness depends on Redis; rate limiting is not implemented.     |
-| **Result**    | A successful OTP is consumed in the validation operation.           |
+### Feature-oriented packages instead of technical-role packages
 
-[⬆ back to top](#table-of-contents)
+The current package layout groups link, report, analytics, Redis, Kafka, and user behavior with their own DTOs, entities, repositories, and services. This keeps a feature's request path and persistence collaborators together; shared concerns remain in dedicated packages.
 
----
+## Reliability ledger
 
-## Reliability and Limitations
+Handled:
 
-**Implemented mechanisms:** Redis atomic counter allocation · atomic OTP validation/deletion · MongoDB atomic report increments · invalid-hash upper-bound checks · VirusTotal timeout/error fallback · redirect MongoDB fallback · Kafka listener retries.
+- Redis `INCR` allocates counter values atomically.
+- OTP validation and deletion are one Redis Lua operation.
+- Report-count increment is a MongoDB `findAndModify` `$inc`.
+- Invalid/future decoded hashes are rejected before a lookup.
+- VirusTotal scan errors and the two-minute polling timeout yield `UNVERIFIED`.
+- Redirect cache misses fall back to MongoDB.
+- Kafka listeners use a fixed one-second backoff with two retries.
 
-**Current limitations:**
+Not handled or intentionally incomplete:
 
-- Kafka sends are fire-and-forget with no outbox or result handling.
-- Listener retries do not cover failures occurring later inside a reactive callback.
-- No DLT, replay, event idempotency, or deduplication.
-- Redirect Hashes can be stale.
-- Click writes are separate.
-- External calls lack circuit breakers.
-- Duplicate-report checks can race.
-- JWTs cannot be revoked/refreshed.
-- CSRF and rate limiting are disabled/not implemented.
-- Brevo failures are logged and swallowed.
+- Kafka publishing is fire-and-forget: no outbox, result handling, DLT, replay path, or consumer deduplication is implemented.
+- Link-creation and analytics persistence are at-least-once from the application perspective; duplicate delivery can repeat side effects.
+- Redirect cache entries have no TTL.
+- Duplicate-report prevention is a read before asynchronous report processing, not a database uniqueness constraint or atomic claim.
+- Email-provider failures are logged and swallowed.
+- IPInfo only handles rate-limit failures explicitly; other lookup failures can fail the listener.
+- JWTs have no refresh, revocation, or server-side logout mechanism.
+- CSRF is disabled, and OTP rate limiting is not implemented.
 
-[⬆ back to top](#table-of-contents)
+## What this project demonstrates
 
----
-
-## Future Improvements
-
-- Add outbox/durable workflow state, event IDs, idempotent consumers, producer-result handling, DLT, replay, and versioned contracts.
-- Add bounded external-call retries, circuit breakers, health checks, metrics, tracing, and integration/concurrency tests.
-- Add a unique report constraint or atomic duplicate-report workflow.
-- Add redirect-entry versioning/invalidation and define counter recovery behavior.
-- Add moderation/reverification processing and the missing link-owner report notification if that is part of the product contract.
-- Add server-side JWT revocation/refresh policy, CSRF protection where appropriate, and OTP rate limiting.
-
-[⬆ back to top](#table-of-contents)
+SmartLink demonstrates a deliberately practical boundary: concise URL allocation and navigation remain quick, while threat analysis, analytics enrichment, and notifications are moved to the components that can tolerate asynchronous work. The implementation also makes its tradeoffs visible—especially around cache invalidation, Kafka delivery guarantees, and external-service failure—rather than presenting a shortener as a simple map from one URL to another.
