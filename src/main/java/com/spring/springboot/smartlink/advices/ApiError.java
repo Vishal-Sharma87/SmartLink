@@ -3,15 +3,18 @@ package com.spring.springboot.smartlink.advices;
 import lombok.Data;
 
 import java.time.LocalDateTime;
+
 @Data
 public class ApiError {
     private LocalDateTime timestamp;
     private String message;
-    private int errorCode;
+    private String code;
+    private int httpStatus;
 
-    public ApiError(String message, int errorCode) {
+    public ApiError(LocalDateTime timestamp, String message, String code, int httpStatus) {
+        this.timestamp = timestamp;
         this.message = message;
-        this.errorCode = errorCode;
-        this.timestamp = LocalDateTime.now();
+        this.code = code;
+        this.httpStatus = httpStatus;
     }
 }
