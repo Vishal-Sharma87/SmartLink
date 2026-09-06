@@ -1,4 +1,4 @@
-package com.spring.springboot.smartlink.dto.responseDtos;
+package com.spring.springboot.smartlink.link.dtos;
 
 import com.spring.springboot.smartlink.enums.Verdict;
 import lombok.AllArgsConstructor;
@@ -7,7 +7,6 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 
 import java.time.Instant;
-
 
 @Data
 @AllArgsConstructor
@@ -22,7 +21,7 @@ public class LinkAsResponseDto {
      * status
      * report cnt
      * click cnt
-     * */
+     */
     private String id;
     private String actualUrl;
     private String hashedKey;

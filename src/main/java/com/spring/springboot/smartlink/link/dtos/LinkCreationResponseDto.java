@@ -1,5 +1,6 @@
-package com.spring.springboot.smartlink.dto.responseDtos;
+package com.spring.springboot.smartlink.link.dtos;
 
+import com.spring.springboot.smartlink.link.enums.LinkStatus;
 import lombok.Builder;
 import lombok.Data;
 
@@ -7,6 +8,6 @@ import lombok.Data;
 @Builder
 public class LinkCreationResponseDto {
     private String message;
-    private String status;
+    private LinkStatus status;
     private String shortUrl;
 }

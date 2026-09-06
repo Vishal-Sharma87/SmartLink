@@ -1,4 +1,4 @@
-package com.spring.springboot.smartlink.dto;
+package com.spring.springboot.smartlink.link.dtos;
 
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
