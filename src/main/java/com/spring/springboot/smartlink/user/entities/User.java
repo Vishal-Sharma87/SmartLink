@@ -1,4 +1,4 @@
-package com.spring.springboot.smartlink.entity;
+package com.spring.springboot.smartlink.user.entities;
 
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
