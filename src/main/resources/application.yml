@@ -1,55 +1,56 @@
 spring:
   application:
-    name: SmartLink
+    name: "SmartLink"
 
   config:
     import: "optional:file:.env[.properties]"
 
   data:
     mongodb:
-      uri: ${MONGODB_URI}
+      uri: "${MONGODB_URI}"
       auto-index-creation: true
 
 
 smart-link:
   application-configs:
-    short-url-prefix: ${COMPANY_ENDPOINT}
+    short-url-prefix: "${COMPANY_ENDPOINT}"
 
   db-keys:
     users:
-      malicious-urls-created-count: ${SMART_LINK_USERS_MALICIOUS_URLS_CREATED_COUNT}
+      malicious-urls-created-count: "${SMART_LINK_USERS_MALICIOUS_URLS_CREATED_COUNT}"
 
     links:
-      id: ${SMART_LINK_ID}
-      actual-url: ${SMART_LINK_ACTUAL_URL}
-      hashed-key: ${SMART_LINK_HASHED_KEY}
-      ownerUserName: ${SMART_LINK_OWNER_USERNAME}
-      status: ${SMART_LINK_STATUS}
-      reportCount: ${SMART_LINK_REPORT_COUNT}
-      clickCount: ${SMART_LINK_CLICK_COUNT}
+      id: "${SMART_LINK_ID}"
+      actual-url: "${SMART_LINK_ACTUAL_URL}"
+      hashed-key: "${SMART_LINK_HASHED_KEY}"
+      ownerUserName: "${SMART_LINK_OWNER_USERNAME}"
+      status: "${SMART_LINK_STATUS}"
+      reportCount: "${SMART_LINK_REPORT_COUNT}"
+      clickCount: "${SMART_LINK_CLICK_COUNT}"
 
     abuse-report:
-      reporterEmail: ${SMART_LINK_ABUSE_REPORT_REPORTER_EMAIL}
+      reporterEmail: "${SMART_LINK_ABUSE_REPORT_REPORTER_EMAIL}"
 
 
   api-response:
-    link-created: ${API_RESPONSE_LINK_CREATED}
-    link-creation-pending: ${API_RESPONSE_LINK_CREATION_PENDING}
-    all-links-of-user-message: ${API_RESPONSE_ALL_LINKS_OF_USER_MESSAGE}
-    signup-initiated: ${API_RESPONSE_SIGNUP_INITIATED}
-    link-deleted: ${API_RESPONSE_LINK_DELETED}
-    all-links-of-user-deleted: ${API_RESPONSE_ALL_LINKS_OF_USER_DELETED}
-    report-accepted: ${API_RESPONSE_REPORT_ACCEPTED}
-    malformed-signup-session: ${API_RESPONSE_MALFORMED_SIGNUP_SESSION}
-    user-deleted: ${API_RESPONSE_USER_DELETED}
-    auth-completed: ${API_RESPONSE_AUTH_COMPLETED}
+    link-created: "${API_RESPONSE_LINK_CREATED}"
+    link-creation-pending: "${API_RESPONSE_LINK_CREATION_PENDING}"
+    all-links-of-user-message: "${API_RESPONSE_ALL_LINKS_OF_USER_MESSAGE}"
+    signup-initiated: "${API_RESPONSE_SIGNUP_INITIATED}"
+    link-deleted: "${API_RESPONSE_LINK_DELETED}"
+    all-links-of-user-deleted: "${API_RESPONSE_ALL_LINKS_OF_USER_DELETED}"
+    report-accepted: "${API_RESPONSE_REPORT_ACCEPTED}"
+    malformed-signup-session: "${API_RESPONSE_MALFORMED_SIGNUP_SESSION}"
+    user-deleted: "${API_RESPONSE_USER_DELETED}"
+    auth-completed: "${API_RESPONSE_AUTH_COMPLETED}"
+
 
   kafka:
     connection-configs:
-      bootstrap-servers: ${KAFKA_BOOTSTRAP_SERVERS}
-      security-protocol: ${KAFKA_SECURITY_PROTOCOL}
-      sasl-mechanism: ${KAFKA_SASL_MECHANISM}
-      sasl-jaas-config: ${KAFKA_JAAS_CONFIG}
+      bootstrap-servers: "${KAFKA_BOOTSTRAP_SERVERS}"
+      security-protocol: "${KAFKA_SECURITY_PROTOCOL}"
+      sasl-mechanism: "${KAFKA_SASL_MECHANISM}"
+      sasl-jaas-config: "${KAFKA_JAAS_CONFIG}"
       session-timeout-ms: ${KAFKA_SESSION_TIMEOUT}
 
     topic:
@@ -57,77 +58,76 @@ smart-link:
       link-analysis: "${KAFKA_TOPIC_LINK_ANALYSIS}"
 
     consumer:
-      link-creation-group-id: "${KAFKA_LINK_CREATION_GROUP_ID: smart-link.link-creation-consumer-group}"
-      link-analysis-group-id: "${KAFKA_LINK_ANALYSIS_GROUP_ID: smart-link.link-analysis-consumer-group}"
+      link-creation-group-id: "${KAFKA_LINK_CREATION_GROUP_ID}"
+      link-analysis-group-id: "${KAFKA_LINK_ANALYSIS_GROUP_ID}"
 
     producer:
-        key-serializer: ${KAFKA_KEY_SERIALIZER}
-        value-serializer: ${KAFKA_VALUE_SERIALIZER}
-
+      key-serializer: "${KAFKA_KEY_SERIALIZER}"
+      value-serializer: "${KAFKA_VALUE_SERIALIZER}"
 
 
   virus-total:
-    api-key: ${VT_API_KEY}
-    api-url: ${VT_ANALYSIS_URL}
+    api-key: "${VT_API_KEY}"
+    api-url: "${VT_ANALYSIS_URL}"
+    polling-interval-seconds: ${VT_POLLING_INTERVAL_SECONDS}
+    polling-timeout-minutes: ${VT_POLLING_TIMEOUT_MINUTES}
 
   jwt:
-    secret-key: ${JWT_SECRET_KEY}
+    secret-key: "${JWT_SECRET_KEY}"
     expiry-duration-minutes: ${JWT_EXPIRY_DURATION_MINUTES}
 
   redis:
     connection-configs:
-      host: ${REDIS_HOST}
+      host: "${REDIS_HOST}"
       port: ${REDIS_PORT}
 
     keys:
-      redirection-cache-prefix: ${REDIS_REDIRECTION_CACHE_PREFIX}
-      url-counter-key: ${URL_COUNTER_KEY}
-      status-hash-key: ${REDIRECTION_CACHE_STATUS_HASH_KEY}
-      long-url-hash-key: ${REDIRECTION_CACHE_LONG_URL_HASH_KEY}
+      redirection-cache-prefix: "${REDIS_REDIRECTION_CACHE_PREFIX}"
+      url-counter-key: "${URL_COUNTER_KEY}"
+      status-hash-key: "${REDIRECTION_CACHE_STATUS_HASH_KEY}"
+      long-url-hash-key: "${REDIRECTION_CACHE_LONG_URL_HASH_KEY}"
 
   redirection:
     pages:
-      error-page: ${ERROR_PAGE}
-      track-page: ${TRACK_PAGE}
-      suspicious-warning-page: ${SUSPICIOUS_WARNING_PAGE}
-      malicious-page: ${MALICIOUS_PAGE}
+      error-page: "${ERROR_PAGE}"
+      track-page: "${TRACK_PAGE}"
+      suspicious-warning-page: "${SUSPICIOUS_WARNING_PAGE}"
+      malicious-page: "${MALICIOUS_PAGE}"
 
   email:
     provider-configs:
-      base-url: ${EMAIL_PROVIDER_BASE_URL}
-      api-key: ${EMAIL_PROVIDER_API_KEY}
+      base-url: "${EMAIL_PROVIDER_BASE_URL}"
+      api-key: "${EMAIL_PROVIDER_API_KEY}"
 
     sender-configs:
-      name: ${SENDER_NAME}
-      email: ${SENDER_EMAIL}
+      name: "${SENDER_NAME}"
+      email: "${SENDER_EMAIL}"
 
     subject:
-      otp: ${EMAIL_OTP_SUBJECT}
-      report-accepted: ${EMAIL_REPORT_ACCEPTED_SUBJECT}
-      link-malicious: ${EMAIL_MALICIOUS_LINK_SUBJECT}
-      link-created: ${EMAIL_LINK_CREATED_SUBJECT}
-      welcome: ${EMAIL_WELCOME_SUBJECT}
+      otp: "${EMAIL_OTP_SUBJECT}"
+      report-accepted: "${EMAIL_REPORT_ACCEPTED_SUBJECT}"
+      link-malicious: "${EMAIL_MALICIOUS_LINK_SUBJECT}"
+      link-created: "${EMAIL_LINK_CREATED_SUBJECT}"
+      welcome: "${EMAIL_WELCOME_SUBJECT}"
 
   exception:
     messages:
-      link-not-found: ${EXC_MSG_LINK_NOT_FOUND}
-      invalid-link-hash: ${EXC_MSG_INVALID_LINK_HASH:}
-      user-not-found: ${EXC_MSG_USER_NOT_FOUND}
-      link-scan-not-found: ${EXC_MSG_LINK_SCAN_NOT_FOUND}
-      username-already-exists: ${EXC_MSG_USERNAME_EXISTS}
-      link-already-reported: ${EXC_MSG_LINK_ALREADY_REPORTED}
-      invalid-otp: ${EXC_MSG_INVALID_OTP}
-      missing-update-fields: ${EXC_MSG_MISSING_FIELDS}
-      sha256-unavailable: ${EXC_MSG_SHA256_UNAVAILABLE}
+      link-not-found: "${EXC_MSG_LINK_NOT_FOUND}"
+      invalid-link-hash: "${EXC_MSG_INVALID_LINK_HASH:}"
+      user-not-found: "${EXC_MSG_USER_NOT_FOUND}"
+      link-scan-not-found: "${EXC_MSG_LINK_SCAN_NOT_FOUND}"
+      username-already-exists: "${EXC_MSG_USERNAME_EXISTS}"
+      link-already-reported: "${EXC_MSG_LINK_ALREADY_REPORTED}"
+      invalid-otp: "${EXC_MSG_INVALID_OTP}"
+      missing-update-fields: "${EXC_MSG_MISSING_FIELDS}"
+      sha256-unavailable: "${EXC_MSG_SHA256_UNAVAILABLE}"
 
   ip-info:
     configs:
-      token: ${IP_INFO_TOKEN}
+      token: "${IP_INFO_TOKEN}"
+
 
 logging:
   level:
     org.apache.kafka: WARN
     org.springframework.kafka: WARN
-
-
-
