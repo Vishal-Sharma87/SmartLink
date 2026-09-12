@@ -1,4 +1,19 @@
 services:
+  application:
+    build: .
+    container_name: "smart-link"
+    ports:
+      - "8080:8080"
+    env_file:
+      - .env
+    depends_on:
+      mongodb:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      kafka:
+        condition: service_started
+
   mongodb:
     image: "mongo:${MONGODB_IMAGE_TAG}"
     container_name: "smart-link-mongodb"
@@ -7,6 +22,13 @@ services:
       - "${MONGODB_PORT}:27017"
     environment:
       MONGO_INITDB_DATABASE: "${MONGODB_DATABASE}"
+    healthcheck:
+      test: [ "CMD", "mongosh", "--eval", "db.adminCommand('ping')" ]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
+
     volumes:
       - "smartlink_mongodb-data:/data/db"
 
@@ -16,6 +38,13 @@ services:
     restart: unless-stopped
     ports:
       - "${REDIS_PORT}:6379"
+    healthcheck:
+      test: [ "CMD", "redis-cli", "ping" ]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
+
     volumes:
       - "smartlink_redis-data:/data"
 
