@@ -1,6 +1,9 @@
 #!/bin/bash
 cp .env.base .env
 
+# Ensure appended content starts on a new line
+echo "" >> .env
+
 SECRETS=("JWT_SECRET_KEY" "VT_API_KEY" "IP_INFO_TOKEN" "EMAIL_PROVIDER_API_KEY")
 VAULT_NAME="smartlink-key-vault"
 QUERY="value"
