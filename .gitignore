@@ -22,6 +22,10 @@ target/
 
 application-*.yml
 
+# Docker
+
+docker-compose.override.yml
+
 # Local environment settings
 .env
 
