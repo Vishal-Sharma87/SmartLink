@@ -1,62 +1,69 @@
 <!DOCTYPE html>
 <html lang="en" xmlns:th="http://www.thymeleaf.org">
-
 <head th:replace="~{fragments/head :: head('SmartLink — Report abuse')}"></head>
+<body>
+<div th:replace="~{fragments/navbar-public :: navbar-public}"></div>
+<main class="container narrow-layout report-layout" data-report-page>
+    <section class="panel-stack">
+        <p class="kicker">COMMUNITY SAFETY</p>
+        <h1>Report a SmartLink.</h1>
+        <p class="lede">Tell us what is wrong with a link. We verify your email before accepting the report.</p>
+        <div th:replace="~{fragments/alerts :: alert}"></div>
 
-<body class="app-page">
-    <div th:replace="~{fragments/navbar :: navbar}"></div>
-    <main class="container narrow-main">
-        <div class="page-header compact">
-            <div><span class="eyebrow">COMMUNITY SAFETY</span>
-                <h1>Report a suspicious link</h1>
-                <p>Help keep SmartLink safe by sharing a concern about a destination.</p>
+        <form class="form-stack" action="#" method="post" data-report-details-form>
+            <label for="report-link">Short URL
+                <input id="report-link" name="linkToReport" type="url" maxlength="2048" placeholder="http://example/abc1234" autocomplete="url" required data-report-link>
+            </label>
+            <p class="form-note">Enter the complete SmartLink URL you want to report.</p>
+            <div class="field-grid">
+                <label for="reporter-name">Your name
+                    <input id="reporter-name" name="reporterName" maxlength="100" autocomplete="name" required data-reporter-name>
+                </label>
+                <label for="reporter-email">Email
+                    <input id="reporter-email" name="reporterEmail" type="email" maxlength="254" autocomplete="email" required data-reporter-email>
+                </label>
             </div>
-        </div>
-        <section class="report-card card" data-report-app>
-            <div class="stepper"><span class="step active" data-step-indicator="1"><b>1</b><span>Report
-                        details</span></span><i></i><span class="step" data-step-indicator="2"><b>2</b><span>Verify
-                        email</span></span></div>
-            <div class="alert hidden" data-report-alert role="alert"></div>
-            <form class="form-stack" data-report-form>
-                <div class="report-step" data-report-step="1"><label>Short URL<input name="linkToReport" type="url"
-                            required placeholder="https://your-domain/abc123"></label>
-                    <div class="form-two"><label>Your name<input name="reporterName" required
-                                placeholder="Your name"></label><label>Email address<input name="reporterEmail"
-                                type="email" required placeholder="you@example.com"></label></div>
-                    <fieldset class="cause-fieldset">
-                        <legend>Why are you reporting this link?</legend><span class="field-hint">Select all that
-                            apply.</span>
-                        <div class="cause-options"><label th:each="reportCause : ${reportCauses}"><input type="checkbox"
-                                    name="cause" th:value="${reportCause.name()}"><span
-                                    th:text="${#strings.replace(reportCause.name(), '_', ' ')}">PHISHING</span></label>
-                        </div>
-                    </fieldset><label>Additional context <span class="optional">Optional</span><textarea
-                            name="description" rows="4"
-                            placeholder="Tell us what happened..."></textarea></label><button
-                        class="button button-primary button-wide" type="button" data-continue-report>Continue to
-                        verification <span>→</span></button>
+            <fieldset data-cause-group>
+                <legend>Report cause</legend>
+                <p class="form-note">Select at least one reason.</p>
+                <div class="cause-grid">
+                    <label class="cause-option" th:each="cause : ${reportCauses}">
+                        <input type="checkbox" name="cause" th:value="${cause.name()}" data-report-cause>
+                        <span th:text="${#strings.replace(cause.name(), '_', ' ')}">PHISHING</span>
+                    </label>
                 </div>
-                <div class="report-step hidden" data-report-step="2">
-                    <div class="verification-note"><span class="feature-icon green">✓</span>
-                        <div><strong>Verification code sent.</strong>
-                            <p>Enter the code sent to your email to submit the report.</p>
-                        </div>
-                    </div><label>One-time verification code<input name="otp" inputmode="numeric" required
-                            placeholder="4 digits"></label><button class="button button-primary button-wide"
-                        type="submit" data-submit>Verify & submit report <span>→</span></button><button
-                        class="text-button" type="button" data-back-report>← Back to report details</button>
+            </fieldset>
+            <label for="report-description">Additional context <span class="form-note">(optional)</span>
+                <textarea id="report-description" name="description" maxlength="2000" rows="4" data-report-description></textarea>
+            </label>
+            <button class="button button-primary" type="submit" data-generate-otp>Send verification code</button>
+        </form>
+
+        <section class="report-step is-hidden" data-report-otp-step aria-labelledby="report-otp-heading">
+            <p class="kicker">VERIFY EMAIL</p>
+            <h2 id="report-otp-heading">Enter your verification code.</h2>
+            <p class="lede">A six-digit code was sent to <strong data-report-email-display></strong>.</p>
+            <form class="form-stack" action="#" method="post" data-report-submit-form>
+                <label for="report-otp">Verification code
+                    <input id="report-otp" name="otp" inputmode="numeric" autocomplete="one-time-code" pattern="[0-9]{6}" minlength="6" maxlength="6" required data-report-otp>
+                </label>
+                <div class="action-row">
+                    <button class="button button-primary" type="submit" data-submit-report>Submit report</button>
+                    <button class="button button-secondary" type="button" data-resend-otp>Send code again</button>
+                    <button class="button button-ghost" type="button" data-edit-report>Change report details</button>
                 </div>
             </form>
-            <div class="success-state hidden" data-report-success><span class="success-check">✓</span>
-                <h2>Report submitted successfully.</h2>
-                <p>We’ve accepted your report and will process it as soon as possible.</p><a
-                    class="button button-secondary" th:href="@{/}">Return home</a>
-            </div>
         </section>
-    </main>
-    <div th:replace="~{fragments/footer :: footer}"></div>
-    <script th:src="@{/js/site.js}"></script>
-    <script th:src="@{/js/report-abuse.js}"></script>
-</body>
 
+        <section class="report-success is-hidden" data-report-success aria-live="polite">
+            <p class="kicker">REPORT RECEIVED</p>
+            <h2>Thank you for helping keep SmartLink safe.</h2>
+            <p data-report-success-message></p>
+            <a class="button button-secondary" th:href="@{/}">Return home</a>
+        </section>
+    </section>
+</main>
+<div th:replace="~{fragments/footer :: footer}"></div>
+<script defer th:src="@{/js/report-abuse.js}"></script>
+</body>
 </html>

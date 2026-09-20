@@ -1,22 +1,12 @@
 <!DOCTYPE html>
-<html xmlns:th="http://www.w3.org/1999/xhtml">
-
-<head>
-    <title>SmartLink — Destination blocked</title>
-    <link rel="stylesheet" href="/css/style.css" />
-</head>
-
-<body class="auth-page">
-    <div class="auth-shell">
-        <div class="auth-card centered warning-card">
-            <span class="feature-icon orange warning-icon">!</span>
-            <h2>Destination blocked</h2>
-            <p class="warning-copy">This URL was blocked because it was confirmed to be malicious. For your safety,
-                SmartLink will not redirect you.</p>
-            <p class="alert error">SmartLink blocked this destination for your safety.</p><a
-                class="button button-secondary" href="/">Return home</a>
-        </div>
-    </div>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments/head :: head('SmartLink — Destination blocked')}"></head>
+<body>
+<main class="container centered-layout">
+    <section class="panel-stack centered"><p class="kicker status-danger">DESTINATION BLOCKED</p>
+        <h1>We blocked this destination.</h1>
+        <p class="lede">The link was identified as malicious and SmartLink will not redirect you.</p><a
+                class="button button-secondary" th:href="@{/}">Return home</a></section>
+</main>
 </body>
-
 </html>

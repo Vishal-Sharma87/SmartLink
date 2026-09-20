@@ -1,31 +1,5 @@
 <!DOCTYPE html>
-<html xmlns:th="http://www.w3.org/1999/xhtml">
-
-<head>
-    <title>SmartLink — Review destination</title>
-    <link rel="stylesheet" href="/css/style.css" />
-</head>
-
-<body class="auth-page">
-    <div class="auth-shell">
-        <div class="auth-card centered warning-card">
-            <span class="feature-icon orange warning-icon">!</span>
-            <h2>Review this destination</h2>
-            <p class="warning-copy">This link looks suspicious or has not been fully verified. Continue only if you
-                recognize and trust the destination.</p>
-            <div class="detail-item"><small>Destination URL</small><strong th:text="${longUrl}"></strong></div>
-            <button class="button button-primary button-wide" id="proceedBtn">Proceed anyway</button>
-            <a class="button button-ghost button-wide" href="/">Go back</a>
-        </div>
-    </div>
-
-    <script th:inline="javascript">
-        const shortCode = /*[[${shortCode}]]*/ '';
-        document.getElementById("proceedBtn").addEventListener("click", () => {
-            window.location.href = `/api/confirm/${shortCode}`;
-        });
-    </script>
-
-</body>
-
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments/head :: head('SmartLink — Review destination')}"></head>
+<body><main class="container centered-layout"><section class="panel-stack centered"><p class="kicker status-warning">DESTINATION REVIEW</p><h1>Review this destination.</h1><p class="lede">This link is suspicious or has not been fully verified. Continue only if you recognize the destination.</p><p class="destination" th:text="${originalUrl}">Destination URL</p><a class="button button-primary" th:href="@{/api/confirm/{code}(code=${shortCode})}">Proceed anyway</a><a class="button button-ghost" th:href="@{/}">Go back</a></section></main></body>
 </html>

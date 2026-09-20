@@ -4,6 +4,7 @@
 <head>
     <title>SmartLink — Redirecting</title>
     <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
 
     <meta http-equiv="Cache-Control" content="no-store, no-cache, must-revalidate" />
     <meta http-equiv="Pragma" content="no-cache" />
@@ -12,57 +13,58 @@
     <link rel="stylesheet" href="/css/style.css" />
 </head>
 
-<body class="auth-page">
-    <div class="auth-shell">
-        <div class="auth-card centered">
-            <span class="brand-mark warning-icon">S</span>
-            <h2>Taking you there…</h2>
-            <p class="warning-copy">We’re recording this click and checking the destination.</p>
-        </div>
+<body class="auth-page track-page">
+<div class="auth-shell track-shell">
+    <div class="auth-card centered track-card">
+        <span class="brand-mark warning-icon track-mark">S</span>
+        <p class="track-brand-label">SMARTLINK</p>
+        <h2 class="track-title">Taking you there…</h2>
+        <p class="warning-copy track-copy">We’re recording this click and checking the destination.</p>
     </div>
+</div>
 
-    <script th:inline="javascript">
-        (function () {
+<script th:inline="javascript">
+    (function () {
 
-            /* Thymeleaf injected values */
-            const shortHash = /*[[${shortCode}]]*/ '';
-            const longUrl = /*[[${longUrl}]]*/ '';
+        /* Thymeleaf injected values */
+        const shortCode = /*[[${shortCode}]]*/ '';
+        const originalUrl = /*[[${originalUrl}]]*/ '';
 
-            /* Safety check */
-            if (!longUrl) {
-                console.error("Redirect failed: longUrl is empty");
-                return;
-            }
+        /* Safety check */
+        if (!originalUrl) {
+            console.error("Redirect failed: originalUrl is empty");
+            return;
+        }
 
-            /* Tracking payload */
-            const payload = {
-                shortHash: shortHash,
+        /* Tracking payload */
+        const payload = {
+            shortCode: shortCode,
 
-                screenWidth: window.screen.width,
+            screenWidth: window.screen.width,
 
-                viewportWidth: window.innerWidth,
+            viewportWidth: window.innerWidth,
 
-                userAgent: navigator.userAgent,
-                timezone: Intl.DateTimeFormat().resolvedOptions().timeZone
-            };
+            userAgent: navigator.userAgent,
+            timezone: Intl.DateTimeFormat().resolvedOptions().timeZone
+        };
 
-            /* Fire-and-forget tracking */
-            fetch("/api/track", {
-                method: "POST",
-                headers: {
-                    "Content-Type": "application/json"
-                },
-                body: JSON.stringify(payload),
-                keepalive: true
-            })
-                .catch(err => console.error("Tracking failed", err))
-                .finally(() => {
-                    /* Guaranteed redirect */
-                    window.location.replace(longUrl);
-                });
+        /* Fire-and-forget tracking */
+        fetch("/api/track", {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json"
+            },
+            body: JSON.stringify(payload),
+            keepalive: true
+        })
+            .catch(err => console.error("Tracking failed", err))
+            .finally(() => {
+                /* Guaranteed redirect */
+                window.location.replace(originalUrl);
+            });
 
-        })();
-    </script>
+    })();
+</script>
 
 </body>
 

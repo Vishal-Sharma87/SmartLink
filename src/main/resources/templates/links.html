@@ -1,0 +1,30 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments/head :: head('SmartLink — My Links')}"></head>
+<body>
+<div th:replace="~{fragments/navbar-authenticated :: navbar-authenticated}"></div>
+<main class="container page-layout links-layout" data-links-page>
+    <header class="page-header links-page-header">
+        <div>
+            <p class="kicker">MY LINKS</p>
+            <h1>Your SmartLinks.</h1>
+            <p class="lede">Review the links you have created and their latest safety state.</p>
+        </div>
+        <a class="button button-primary" th:href="@{/shorten}">Create a SmartLink</a>
+    </header>
+
+    <div th:replace="~{fragments/alerts :: alert}"></div>
+
+    <p class="loading-state" data-links-loading role="status" aria-live="polite">Loading your links…</p>
+    <section class="empty-state panel-stack is-hidden" data-links-empty aria-live="polite">
+        <p class="kicker">NO LINKS YET</p>
+        <h2>Create your first SmartLink.</h2>
+        <p class="lede">Shorten a URL to see it here and keep track of its current state.</p>
+        <a class="button button-primary" th:href="@{/shorten}">Shorten a URL</a>
+    </section>
+    <section class="links-list is-hidden" data-links-list aria-live="polite"></section>
+</main>
+<div th:replace="~{fragments/footer :: footer}"></div>
+<script defer th:src="@{/js/links.js}"></script>
+</body>
+</html>

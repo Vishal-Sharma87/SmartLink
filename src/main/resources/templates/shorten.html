@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments/head :: head('SmartLink — Shorten URL')}"></head>
+<body>
+<div th:replace="~{fragments/navbar-authenticated :: navbar-authenticated}"></div>
+<main class="container narrow-layout shorten-layout">
+    <header class="page-header">
+        <p class="kicker">SHORTEN URL</p>
+        <h1>Create a SmartLink.</h1>
+        <p class="lede">Enter an original URL and SmartLink will queue it for safety processing before it is shared.</p>
+    </header>
+    <section class="panel-stack">
+        <div th:replace="~{fragments/alerts :: alert}"></div>
+        <form class="form-stack" action="/link/create" method="post" data-shorten-form>
+            <label for="original-url">Original URL</label>
+            <input id="original-url" name="originalUrl" type="url" maxlength="2048"
+                   placeholder="https://example.com/article" autocomplete="url" required data-original-url>
+            <p class="form-note">Use a complete URL, including its scheme such as https://.</p>
+            <button class="button button-primary" type="submit" data-shorten-submit>Create short link</button>
+        </form>
+        <section class="creation-result is-hidden" role="dialog" aria-modal="true" aria-labelledby="creation-result-heading"
+                 aria-live="polite" data-creation-result>
+            <div class="creation-result-card">
+                <button class="creation-result-close" type="button" aria-label="Close" data-close-creation-result>×</button>
+                <div>
+                    <p class="kicker">CREATED</p>
+                    <h2 id="creation-result-heading">Your SmartLink has been queued.</h2>
+                    <a class="result-url" href="#" target="_blank" rel="noopener noreferrer" data-short-url></a>
+                    <p class="form-note" data-creation-message></p>
+                </div>
+                <div class="result-actions">
+                    <span class="status-label" data-creation-status></span>
+                    <div class="action-row">
+                        <button class="button button-secondary" type="button" data-copy-short-url>Copy link</button>
+                        <a class="button button-primary" th:href="@{/links}">My Links</a>
+                    </div>
+                </div>
+            </div>
+        </section>
+    </section>
+</main>
+<div th:replace="~{fragments/footer :: footer}"></div>
+<script defer th:src="@{/js/shorten.js}"></script>
+</body>
+</html>
