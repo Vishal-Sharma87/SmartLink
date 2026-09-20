@@ -23,6 +23,7 @@ public class EmailProvider {
 
     public void send(@NonNull EmailBody emailDto) {
         try {
+            log.debug("Email provider request initiated");
             webClient.mutate()
                     .baseUrl(emailProviderConfigs.baseUrl())
                     .build()
@@ -34,9 +35,10 @@ public class EmailProvider {
                     .retrieve()
                     .bodyToMono(EmailResponse.class)
                     .block();
+            log.debug("Email provider request completed");
 
         } catch (Exception e) {
-            log.error("Something went wrong during email sending. Exception:  {}", e.getMessage());
+            log.error("Email provider request failed", e);
         }
 
     }

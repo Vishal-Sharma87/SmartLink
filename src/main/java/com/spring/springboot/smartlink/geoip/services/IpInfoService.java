@@ -35,8 +35,7 @@ public class IpInfoService {
             return response;
 
         } catch (RateLimitedException e) {
-            log.error("Rate Limited For IpInfoLite lookup, ip {}", ip);
-            log.error("IP information lookup failed due to rate limiting", e);
+            log.warn("IP information lookup was rate limited");
             return null;
         }
     }
