@@ -1,7 +1,9 @@
 package com.spring.springboot.smartlink.user.authentication.services;
 
+import com.spring.springboot.smartlink.advices.enums.ErrorCode;
 import com.spring.springboot.smartlink.advices.exceptions.InvalidOTPExceptionSmartLink;
-import com.spring.springboot.smartlink.advices.exceptions.UsernameAlreadyExistsExceptionSmartLink;
+import com.spring.springboot.smartlink.advices.exceptions.SmartlinkAuthException;
+import com.spring.springboot.smartlink.advices.exceptions.UserWithEmailExistsException;
 import com.spring.springboot.smartlink.apiresponse.ResponseMessage;
 import com.spring.springboot.smartlink.configurations.ExceptionMessages;
 import com.spring.springboot.smartlink.user.authentication.dtos.*;
@@ -10,14 +12,18 @@ import com.spring.springboot.smartlink.user.entities.User;
 import com.spring.springboot.smartlink.jwt.services.JwtService;
 import com.spring.springboot.smartlink.otp.services.OtpService;
 import com.spring.springboot.smartlink.user.repositories.UserRepository;
+import com.spring.springboot.smartlink.user.services.UserService;
 import jakarta.servlet.http.HttpSession;
+import jakarta.validation.Valid;
+import jakarta.validation.constraints.NotBlank;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.authentication.AuthenticationManager;
+import org.springframework.security.core.AuthenticationException;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
-import java.util.Date;
+import java.time.Instant;
 import java.util.List;
 
 @Slf4j
@@ -33,6 +39,7 @@ public class AuthService {
     private final ExceptionMessages exceptionMessages;
     private final EmailService emailService;
     private final ResponseMessage responseMessage;
+    private final UserService userService;
 
     public AuthService(
             UserRepository userRepository,
@@ -42,7 +49,8 @@ public class AuthService {
             OtpService otpService,
             ExceptionMessages exceptionMessages,
             EmailService emailService,
-            ResponseMessage responseMessage) {
+            ResponseMessage responseMessage,
+            UserService userService) {
 
         this.userRepository = userRepository;
         this.passwordEncoder = passwordEncoder;
@@ -52,101 +60,98 @@ public class AuthService {
         this.exceptionMessages = exceptionMessages;
         this.emailService = emailService;
         this.responseMessage = responseMessage;
-
+        this.userService = userService;
     }
 
-    // Business logic for signup
-    public SignupInitiateResponse initiateSignup(SignupInitiationRequestDto request, HttpSession session) {
-        if (userRepository.findUserByUserName(request.getUserName()) != null) {
-            throw new UsernameAlreadyExistsExceptionSmartLink(
-                    String.format(exceptionMessages.usernameAlreadyExists(), request.getUserName()));
+    public SignupInitiateResponse initiateSignup(
+            @Valid SignupInitiateDto request,
+            HttpSession session) {
+
+        String email = request.getEmail();
+        if (userService.existsByEmail(email)) {
+            log.warn("Signup initiation rejected because the email is already registered");
+            throw new UserWithEmailExistsException(
+                    String.format(exceptionMessages.userWithEmailExists(), email));
         }
-        session.setAttribute(PENDING_SIGNUP_SESSION_KEY, request);
-        otpService.sendOtp(request.getEmail());
 
         // replace password from raw string to encoded to avoid plain strings
         request.setPassword(passwordEncoder.encode(request.getPassword()));
 
-        log.info("Signup OTP generated for email {}", request.getEmail());
+        session.setAttribute(PENDING_SIGNUP_SESSION_KEY, request);
+        otpService.sendOtp(email);
+
+        log.info("Signup initiation completed and OTP dispatch requested");
 
         return new SignupInitiateResponse(request.getEmail(), responseMessage.signupInitiated());
     }
 
-    public AuthResponse getJwtIfSignupCompletes(
-            SignupVerificationRequestDto verification,
+    public AuthTokens getJwtIfSignupCompletes(
+            @NotBlank String otp,
             HttpSession session) {
-        SignupInitiationRequestDto pending = (SignupInitiationRequestDto) session
-                .getAttribute(PENDING_SIGNUP_SESSION_KEY);
 
-        if (pending == null) {
-            return AuthResponse.of(null, responseMessage.malformedSignupSession());
+        Object pendingSignup = session.getAttribute(PENDING_SIGNUP_SESSION_KEY);
+
+        if (!(pendingSignup instanceof SignupInitiateDto pending)) {
+            log.warn("Signup OTP verification rejected because the pending signup session was unavailable");
+            throw new SmartlinkAuthException(ErrorCode.PENDING_SIGNUP_NOT_FOUND, exceptionMessages.authException());
         }
 
-        String userName = pending.getUserName();
         String email = pending.getEmail();
 
-        if (userRepository.findUserByUserName(userName) != null) {
-            throw new UsernameAlreadyExistsExceptionSmartLink(
-                    String.format(exceptionMessages.usernameAlreadyExists(), userName));
+        if (userService.existsByEmail(email)) {
+            log.warn("Signup OTP verification rejected because the email is already registered");
+            throw new UserWithEmailExistsException(
+                    String.format(exceptionMessages.userWithEmailExists(), email));
         }
-        if (otpService.isInvalidOtp(email, verification.getOtp())) {
+
+        if (otpService.isInvalidOtp(email, otp)) {
             throw new InvalidOTPExceptionSmartLink(exceptionMessages.invalidOtp());
         }
 
         saveUser(pending);
         session.removeAttribute(PENDING_SIGNUP_SESSION_KEY);
 
-        emailService.sendWelcomeEmail(userName, email);
+        emailService.sendWelcomeEmail(pending.getFirstName(), email);
 
-        log.info("User registration completed for username {}", userName);
-
-        return buildAuthResponse(userName);
+        log.info("Signup OTP verification completed and account creation finished");
+        return buildAuthResponse(pending.getEmail());
     }
 
-    public AuthResponse registerUser(SignupRequestDto request) {
-        User userInDb = userRepository.findUserByUserName(request.getUserName());
+    private void saveUser(
+            SignupInitiateDto pending) {
 
-        if (userInDb != null)
-            throw new UsernameAlreadyExistsExceptionSmartLink(
-                    String.format(exceptionMessages.usernameAlreadyExists(), request.getUserName()));
-
-        if (otpService.isInvalidOtp(request.getEmail(), request.getOtp()))
-            throw new InvalidOTPExceptionSmartLink(exceptionMessages.invalidOtp());
-
-        SignupInitiationRequestDto details = new SignupInitiationRequestDto();
-        details.setEmail(request.getEmail());
-        details.setUserName(request.getUserName());
-        details.setPassword(passwordEncoder.encode(request.getPassword()));
-
-        saveUser(details);
-        emailService.sendWelcomeEmail(details.getUserName(), details.getEmail());
-
-        return buildAuthResponse(request.getUserName());
-    }
-
-    private void saveUser(SignupInitiationRequestDto request) {
-        userRepository.save(User.builder()
-                .email(request.getEmail())
-                .userName(request.getUserName())
-                .password(request.getPassword())
+        User userToSave = User.builder()
+                .firstName(pending.getFirstName())
+                .lastName(pending.getLastName())
+                .email(pending.getEmail())
+                .password(pending.getPassword())
                 .roles(List.of("USER"))
-                .creationDate(new Date())
-                .maliciousUrlsCreatedCount(0)
-                .build());
+                .creationDate(Instant.now())
+                .build();
+
+        userRepository.save(userToSave);
     }
 
-    public AuthResponse loginUser(LoginRequestDto request) {
-        authenticationManager.authenticate(
-                new UsernamePasswordAuthenticationToken(
-                        request.getUserName(),
-                        request.getPassword()));
-        log.info("User authentication succeeded for username {}", request.getUserName());
-
-        return buildAuthResponse(request.getUserName());
+    public AuthTokens loginUser(@Valid LoginDto request) {
+        try {
+            authenticationManager.authenticate(
+                    new UsernamePasswordAuthenticationToken(request.email(), request.password()));
+        } catch (AuthenticationException ex) {
+            log.warn("Login rejected for an invalid authentication attempt");
+            throw new SmartlinkAuthException(ErrorCode.AUTHENTICATION_FAILED,
+                    exceptionMessages.authenticationFailed());
+        }
+        log.info("Login authentication completed successfully");
+        return buildAuthResponse(request.email());
     }
 
-    private AuthResponse buildAuthResponse(String userName) {
-        String token = jwtService.generateJwt(userName);
-        return AuthResponse.of(token, responseMessage.authCompleted());
+    private AuthTokens buildAuthResponse(String email) {
+        return jwtService.generateJwt(email);
+    }
+
+    public AuthTokens refreshToken(String refreshToken) {
+        AuthTokens tokens = jwtService.rotateTokensIfValid(refreshToken);
+        log.info("Refresh token rotation completed successfully");
+        return tokens;
     }
 }

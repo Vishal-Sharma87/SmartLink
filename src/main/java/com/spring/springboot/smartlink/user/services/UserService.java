@@ -1,7 +1,6 @@
 package com.spring.springboot.smartlink.user.services;
 
 import com.spring.springboot.smartlink.apiresponse.ResponseMessage;
-import com.spring.springboot.smartlink.user.entities.User;
 import com.spring.springboot.smartlink.user.repositories.UserRepository;
 import com.spring.springboot.smartlink.link.services.LinkService;
 import lombok.RequiredArgsConstructor;
@@ -20,20 +19,20 @@ public class UserService {
     private final ResponseMessage responseMessage;
 
     @Transactional
-    public String deleteUser(String userName) {
-        log.info("User deletion requested for username {}", userName);
-        linkService.deleAllLinkOfUser(userName);
-        userRepository.deleteUserByUserName(userName);
-        log.info("User account deleted for username {}", userName);
+    public String deleteUser(String userEmail) {
+        log.info("User account deletion initiated");
+        linkService.deleAllLinkOfUser(userEmail);
+        userRepository.deleteUserByEmail(userEmail);
+        log.info("User account deletion completed");
 
         return responseMessage.userDeleted();
     }
 
-    public User getUserByUserName(String userName) {
-        return userRepository.findUserByUserName(userName);
+    public void incrementAndGetMaliciousCount(String email) {
+        mongoUserService.incrementAndGetMaliciousUrlCountOfUser(email);
     }
 
-    public void incrementAndGetMaliciousCount(String userName) {
-        mongoUserService.incrementAndGetMaliciousUrlCountOfUser(userName);
+    public boolean existsByEmail(String email) {
+        return userRepository.findUserByEmail(email).isPresent();
     }
 }

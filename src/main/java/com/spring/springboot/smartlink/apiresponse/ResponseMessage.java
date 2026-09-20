@@ -13,6 +13,7 @@ public record ResponseMessage(
                 String reportAccepted,
                 String signupInitiated,
                 String malformedSignupSession,
-                String authCompleted) {
+                String authCompleted,
+                String refreshTokenRotated) {
 
 }

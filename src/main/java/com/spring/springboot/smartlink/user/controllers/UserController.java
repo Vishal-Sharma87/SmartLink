@@ -23,8 +23,8 @@ public class UserController {
 
     @DeleteMapping("/delete-user")
     public ResponseEntity<ApiResponse<String>> deleteUser() {
-        String userName = SecurityContextHolder.getContext().getAuthentication().getName();
-        String message = userService.deleteUser(userName);
+        String userEmail = SecurityContextHolder.getContext().getAuthentication().getName();
+        String message = userService.deleteUser(userEmail);
         return ResponseEntity
                 .ok(ApiResponse.of(message));
     }

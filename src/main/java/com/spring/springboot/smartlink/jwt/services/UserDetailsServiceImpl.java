@@ -9,6 +9,7 @@ import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.stereotype.Service;
 
+
 @Service
 @RequiredArgsConstructor
 @Slf4j
@@ -17,15 +18,12 @@ public class UserDetailsServiceImpl implements UserDetailsService {
     private final UserRepository userRepository;
 
     @Override
-    public UserDetails loadUserByUsername(String username) throws UsernameNotFoundException {
-        User userInDb = userRepository.findUserByUserName(username);
+    public UserDetails loadUserByUsername(String email) throws UsernameNotFoundException {
+        User userInDb = userRepository.findUserByEmail(email)
+                .orElseThrow(() -> new UsernameNotFoundException(email));
 
-        if (userInDb == null) {
-            log.warn("Authentication rejected because username {} does not exist", username);
-            throw new UsernameNotFoundException(username);
-        }
 
-        log.debug("User details loaded for username {}", username);
+        log.debug("User details loaded for authenticated request");
 
         return org.springframework.security.core.userdetails.User.builder()
                 .authorities(userInDb.getAuthorities())
