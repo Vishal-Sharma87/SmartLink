@@ -28,16 +28,16 @@ public class AnalysisService {
     }
 
     public void publish(TrackPayloadDto dto, HttpServletRequest request) {
-
         String ip = getClientsIp(request);
 
-        LinkAnalysisPayload linkAnalysisPayload = LinkAnalysisPayload.builder()
-                .entityIp(ip)
-                .trackPayloadDto(dto)
-                .build();
+        LinkAnalysisPayload linkAnalysisPayload = new LinkAnalysisPayload(
+                ip,
+                dto
+        );
+
 
         eventPublisher.publish(kafkaTopics.linkAnalysis(), linkAnalysisPayload);
-        log.info("Queued link analysis for short code {}", dto.getShortHash());
+        log.info("Queued link analysis for short code {}", dto.shortCode());
     }
 
     private String getClientsIp(HttpServletRequest request) {
@@ -60,13 +60,12 @@ public class AnalysisService {
     }
 
     public LinkInformation.ClickerDeviceInfo calculateAndGetDeviceInfo(TrackPayloadDto trackPayloadDto) {
-        Integer width = trackPayloadDto.getViewportWidth() == null
-                ? trackPayloadDto.getScreenWidth()
-                : trackPayloadDto.getViewportWidth();
+        int width = trackPayloadDto.viewportWidth() == 0
+                ? trackPayloadDto.screenWidth()
+                : trackPayloadDto.viewportWidth();
 
-        width = width == null ? 0 : width;
-        Browser browser = categoriseBrowserBasedOnUserAgent(trackPayloadDto.getUserAgent());
-        OperatingSystem os = categoriseOperatingSystemBasedOnUserAgent(trackPayloadDto.getUserAgent());
+        Browser browser = categoriseBrowserBasedOnUserAgent(trackPayloadDto.userAgent());
+        OperatingSystem os = categoriseOperatingSystemBasedOnUserAgent(trackPayloadDto.userAgent());
         Device device = categoriseDeviceBasedOnWidthAndOperatingSystem(width, os);
 
         return LinkInformation.ClickerDeviceInfo.builder()

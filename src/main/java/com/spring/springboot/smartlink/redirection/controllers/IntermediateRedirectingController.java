@@ -4,8 +4,8 @@ import com.spring.springboot.smartlink.redirection.dtos.TrackPayloadDto;
 import com.spring.springboot.smartlink.analytics.services.AnalysisService;
 import com.spring.springboot.smartlink.redirection.services.RedirectService;
 import jakarta.servlet.http.HttpServletRequest;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
@@ -14,7 +14,6 @@ import org.springframework.web.bind.annotation.*;
 @Controller
 @RequestMapping("/api")
 @RequiredArgsConstructor
-@Slf4j
 public class IntermediateRedirectingController {
 
     private final RedirectService redirectService;
@@ -25,11 +24,9 @@ public class IntermediateRedirectingController {
     // Found a bug, where due to void, Spring was resolving content to display
     // from the requested URL ended up resolving /api/track, since the file
     // doesn't exist in resources package it threw TemplateInputException
-    public void trackUserInformationForLinkAnalysis(@RequestBody TrackPayloadDto dto, HttpServletRequest request) {
+    public void trackUserInformationForLinkAnalysis(@Valid @RequestBody TrackPayloadDto dto, HttpServletRequest request) {
 
         analysisService.publish(dto, request);
-        log.debug("Link tracking data queued for short code {}", dto.getShortHash());
-
     }
 
     @GetMapping("/confirm/{shortCode}")

@@ -17,8 +17,8 @@ public class LinkInformationService {
         linkInformationRepository.save(linkInformation);
     }
 
-    public List<LinkInformation> findByShortHash(String shortHash) {
-        return linkInformationRepository.findAllByAssociatedShortHashOrderByTimeOfClickDesc(shortHash);
+    public List<LinkInformation> findByShortCode(String shortCode) {
+        return linkInformationRepository.findAllByShortCodeOrderByTimeOfClickDesc(shortCode);
     }
 
 }

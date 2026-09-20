@@ -20,17 +20,17 @@ public class LinkAnalyticsService {
     private final LinkService linkService;
     private final LinkInformationService linkInformationService;
 
-    public LinkAnalyticsResponseDto summarize(String userName, String shortHash) {
-        LinkAsResponseDto link = linkService.findLinkOfUser(shortHash, userName);
+    public LinkAnalyticsResponseDto summarize(String userName, String shortCode) {
+        LinkAsResponseDto link = linkService.findLinkOfUser(shortCode, userName);
 
-        String actualUrl = link.getActualUrl();
-        int fallbackClickCount = link.getClickCnt() == null ? 0 : link.getClickCnt();
+        String originalUrl = link.originalUrl();
+        int fallbackClickCount = link.clickCnt();
 
-        List<LinkInformation> clicks = linkInformationService.findByShortHash(shortHash);
+        List<LinkInformation> clicks = linkInformationService.findByShortCode(shortCode);
         int totalClicks = Math.max(fallbackClickCount, clicks.size());
         return LinkAnalyticsResponseDto.builder()
-                .shortHash(shortHash)
-                .actualUrl(actualUrl)
+                .shortCode(shortCode)
+                .originalUrl(originalUrl)
                 .totalClicks(totalClicks)
                 .uniqueCountries((int) clicks.stream().map(this::country).filter(this::present).distinct().count())
                 .topCountry(summary(countryCounts(clicks), totalClicks).stream().findFirst().orElse(null))

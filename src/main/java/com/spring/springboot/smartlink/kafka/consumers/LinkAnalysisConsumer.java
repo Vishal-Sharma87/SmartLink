@@ -36,7 +36,7 @@ public class LinkAnalysisConsumer {
 
     @KafkaListener(topics = "${smart-link.kafka.topic.link-analysis}", groupId = "${smart-link.kafka.consumer.link-analysis-group-id}", containerFactory = "kafkaListenerContainerFactory")
     public void analysis(LinkAnalysisPayload payload) {
-        String shortCode = payload.getTrackPayloadDto().getShortHash();
+        String shortCode = payload.trackPayloadDto().shortCode();
 
         if (!linkService.incrementClickCountIfExists(shortCode)) {
             log.warn("Link analytics event dropped because short code {} could not be resolved", shortCode);
@@ -44,22 +44,21 @@ public class LinkAnalysisConsumer {
         }
 
         LinkInformation.ClickerDeviceInfo deviceInfo = analysisService
-                .calculateAndGetDeviceInfo(payload.getTrackPayloadDto());
+                .calculateAndGetDeviceInfo(payload.trackPayloadDto());
 
-        String ip = payload.getEntityIp();
+        String ip = payload.entityIp();
         IpInfo ipInfo = ipInfoService.fetchIpInfo(ip);
 
         LinkInformation linkInformation = LinkInformation.builder()
-                .associatedShortHash(shortCode)
+                .shortCode(shortCode)
                 .entityIpInformation(ipInfo)
-                .timeZone(payload.getTrackPayloadDto().getTimezone())
+                .timeZone(payload.trackPayloadDto().timezone())
                 .timeOfClick(Instant.now())
                 .deviceInfo(deviceInfo)
                 .build();
 
         linkInformationService.save(linkInformation);
-        log.info("Link analysis completed for short code {} with browser {}, operating system {}, and device {}",
-                shortCode, deviceInfo.getBrowser(), deviceInfo.getOperatingSystem(), deviceInfo.getDevice());
+        log.debug("Link analytics event persisted for shortCode={}", shortCode);
     }
 
 }

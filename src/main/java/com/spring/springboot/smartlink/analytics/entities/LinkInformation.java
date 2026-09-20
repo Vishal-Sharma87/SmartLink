@@ -22,7 +22,7 @@ public class LinkInformation {
     private ObjectId linkInformationId;
 
     @Indexed
-    private String associatedShortHash;
+    private String shortCode;
 
     private IpInfo entityIpInformation;
 

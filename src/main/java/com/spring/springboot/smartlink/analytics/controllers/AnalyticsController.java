@@ -19,10 +19,10 @@ public class AnalyticsController {
     private final LinkAnalyticsService linkAnalyticsService;
 
     @GetMapping("/link")
-    public ResponseEntity<ApiResponse<LinkAnalyticsResponseDto>> getLinkAnalytics(@RequestParam String shortHash) {
-        String userName = SecurityContextHolder.getContext().getAuthentication().getName();
+    public ResponseEntity<ApiResponse<LinkAnalyticsResponseDto>> getLinkAnalytics(@RequestParam String shortCode) {
+        String userEmail = SecurityContextHolder.getContext().getAuthentication().getName();
 
-        LinkAnalyticsResponseDto response = linkAnalyticsService.summarize(userName, shortHash);
+        LinkAnalyticsResponseDto response = linkAnalyticsService.summarize(userEmail, shortCode);
 
         return ResponseEntity.ok(ApiResponse.of(response));
     }

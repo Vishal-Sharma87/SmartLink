@@ -13,8 +13,8 @@ import java.util.List;
 @NoArgsConstructor
 @AllArgsConstructor
 public class LinkAnalyticsResponseDto {
-    private String shortHash;
-    private String actualUrl;
+    private String shortCode;
+    private String originalUrl;
     private Integer totalClicks;
     private Integer uniqueCountries;
     private SummaryItem topCountry;

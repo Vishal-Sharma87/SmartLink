@@ -21,7 +21,7 @@ import org.springframework.data.mongodb.core.mapping.Document;
 public class LinkScanResponse {
 
     @Id
-    private String hash;
+    private String shortCode;
     private String originalUrl;
     private Verdict verdict;
     private VerdictReason verdictReason;

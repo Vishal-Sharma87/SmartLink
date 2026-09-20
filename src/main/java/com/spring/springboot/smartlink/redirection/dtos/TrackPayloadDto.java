@@ -1,24 +1,14 @@
 package com.spring.springboot.smartlink.redirection.dtos;
 
-import lombok.AllArgsConstructor;
-import lombok.Builder;
-import lombok.Data;
-import lombok.NoArgsConstructor;
+import jakarta.validation.constraints.Min;
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.Size;
 
-@Data
-@Builder
-@NoArgsConstructor
-@AllArgsConstructor
-public class TrackPayloadDto {
-    // used to get clicker's device's, browser's, etc. info for real time analysis
-
-    private String shortHash;
-
-    private Integer screenWidth;
-
-    private Integer viewportWidth;
-
-    private String userAgent;
-
-    private String timezone;
+public record TrackPayloadDto(
+        @NotBlank @Size(max = 32) String shortCode,
+        @Min(0) int screenWidth,
+        @Min(0) int viewportWidth,
+        @NotBlank @Size(max = 1024) String userAgent,
+        @NotBlank @Size(max = 128) String timezone
+) {
 }

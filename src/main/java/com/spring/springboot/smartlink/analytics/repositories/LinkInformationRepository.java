@@ -8,5 +8,5 @@ import java.util.List;
 
 public interface LinkInformationRepository extends MongoRepository<LinkInformation, ObjectId> {
 
-    List<LinkInformation> findAllByAssociatedShortHashOrderByTimeOfClickDesc(String associatedShortHash);
+    List<LinkInformation> findAllByShortCodeOrderByTimeOfClickDesc(String associatedShortHash);
 }

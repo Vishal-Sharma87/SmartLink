@@ -17,7 +17,7 @@ import java.util.*;
 @Service
 public class RedirectService {
 
-    private static final String MODEL_ATTRIBUTE_LONG_URL = "longUrl";
+    private static final String MODEL_ATTRIBUTE_LONG_URL = "originalUrl";
     private static final String MODEL_ATTRIBUTE_SHORT_CODE = "shortCode";
 
     private final RedisService redisService;
@@ -38,60 +38,60 @@ public class RedirectService {
     }
 
     public String addAttributeAndGetPageToReturn(String shortCode, Model model) {
-        if (linkService.isAfterLastCounter(Base62.decode(shortCode, exceptionMessages.invalidLinkHash()))) {
+        if (linkService.isNotInCounterRange(Base62.decode(shortCode, exceptionMessages.invalidLinkHash()))) {
             return redirectionPageConfigs.errorPage();
         }
 
-        String longUrl;
+        String originalUrl;
 
-        List<Object> cachedData = redisService.getRedirectionCache(shortCode);
+        List<String> cachedData = redisService.getRedirectionCache(shortCode);
 
         if (cachedData != null && cachedData.getFirst() != null && cachedData.getLast() != null) {
-            longUrl = cachedData.getFirst().toString();
+            originalUrl = cachedData.getFirst();
         } else {
-            Link linkInDb = linkService.getLinkByHash(shortCode);
+            Link linkInDb = linkService.getLinkByShortCode(shortCode);
 
             if (linkInDb == null) {
                 log.warn("Link with shortCode {} not found", shortCode);
                 return redirectionPageConfigs.errorPage();
             }
 
-            longUrl = linkInDb.getActualUrl();
-            redisService.putInRedirectionCache(shortCode, longUrl, linkInDb.getStatus());
+            originalUrl = linkInDb.getOriginalUrl();
+            redisService.putInRedirectionCache(shortCode, originalUrl, linkInDb.getStatus());
         }
 
-        model.addAttribute(MODEL_ATTRIBUTE_LONG_URL, longUrl);
+        model.addAttribute(MODEL_ATTRIBUTE_LONG_URL, originalUrl);
         model.addAttribute(MODEL_ATTRIBUTE_SHORT_CODE, shortCode);
 
         return redirectionPageConfigs.trackPage();
     }
 
     public String addModelAttributesAndGetPageToServeString(String shortCode, Model model) {
-        if (linkService.isAfterLastCounter(Base62.decode(shortCode, exceptionMessages.invalidLinkHash()))) {
+        if (linkService.isNotInCounterRange(Base62.decode(shortCode, exceptionMessages.invalidLinkHash()))) {
             return redirectionPageConfigs.errorPage();
         }
 
-        String longUrl;
+        String originalUrl;
         Verdict linkStatus;
 
-        List<Object> cachedData = redisService.getRedirectionCache(shortCode);
+        List<String> cachedData = redisService.getRedirectionCache(shortCode);
 
         if (cachedData != null && cachedData.getFirst() != null && cachedData.getLast() != null) {
-            longUrl = cachedData.getFirst().toString();
-            linkStatus = Verdict.valueOf(cachedData.getLast().toString());
+            originalUrl = cachedData.getFirst();
+            linkStatus = Verdict.valueOf(cachedData.getLast());
         } else {
-            Link linkInDb = linkService.getLinkByHash(shortCode);
+            Link linkInDb = linkService.getLinkByShortCode(shortCode);
 
             if (linkInDb == null) {
                 return redirectionPageConfigs.errorPage(); // HTML page "error"
             }
-            longUrl = linkInDb.getActualUrl();
+            originalUrl = linkInDb.getOriginalUrl();
             linkStatus = linkInDb.getStatus();
 
-            redisService.putInRedirectionCache(shortCode, longUrl, linkStatus);
+            redisService.putInRedirectionCache(shortCode, originalUrl, linkStatus);
         }
 
-        model.addAttribute(MODEL_ATTRIBUTE_LONG_URL, longUrl);
+        model.addAttribute(MODEL_ATTRIBUTE_LONG_URL, originalUrl);
         model.addAttribute(MODEL_ATTRIBUTE_SHORT_CODE, shortCode);
 
         return switch (linkStatus) {
