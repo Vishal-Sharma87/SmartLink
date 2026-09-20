@@ -14,22 +14,23 @@ spring:
 smart-link:
   application-configs:
     short-url-prefix: "${COMPANY_ENDPOINT}"
+    domain: "${COMPANY_DOMAIN}"
 
   db-keys:
     users:
       malicious-urls-created-count: "${SMART_LINK_USERS_MALICIOUS_URLS_CREATED_COUNT}"
+      email: "${SMART_LINK_USERS_EMAIL}"
 
     links:
       id: "${SMART_LINK_ID}"
-      actual-url: "${SMART_LINK_ACTUAL_URL}"
-      hashed-key: "${SMART_LINK_HASHED_KEY}"
-      ownerUserName: "${SMART_LINK_OWNER_USERNAME}"
       status: "${SMART_LINK_STATUS}"
-      reportCount: "${SMART_LINK_REPORT_COUNT}"
-      clickCount: "${SMART_LINK_CLICK_COUNT}"
+      owner-email: "${SMART_LINK_OWNER_EMAIL}"
+      click-count: "${SMART_LINK_CLICK_COUNT}"
+      report-count: "${SMART_LINK_REPORT_COUNT}"
+      short-code: "${SMART_LINK_SHORT_CODE}"
 
     abuse-report:
-      reporterEmail: "${SMART_LINK_ABUSE_REPORT_REPORTER_EMAIL}"
+      reporter-email: "${SMART_LINK_ABUSE_REPORT_REPORTER_EMAIL}"
 
 
   api-response:
@@ -43,6 +44,7 @@ smart-link:
     malformed-signup-session: "${API_RESPONSE_MALFORMED_SIGNUP_SESSION}"
     user-deleted: "${API_RESPONSE_USER_DELETED}"
     auth-completed: "${API_RESPONSE_AUTH_COMPLETED}"
+    refresh-token-rotated: "${API_RESPONSE_REFRESH_TOKEN_ROTATED}"
 
 
   kafka:
@@ -72,9 +74,12 @@ smart-link:
     polling-interval-seconds: ${VT_POLLING_INTERVAL_SECONDS}
     polling-timeout-minutes: ${VT_POLLING_TIMEOUT_MINUTES}
 
+
   jwt:
     secret-key: "${JWT_SECRET_KEY}"
     expiry-duration-minutes: ${JWT_EXPIRY_DURATION_MINUTES}
+    refresh-expiry-days: ${JWT_REFRESH_EXPIRY_DAYS}
+
 
   redis:
     connection-configs:
@@ -85,7 +90,12 @@ smart-link:
       redirection-cache-prefix: "${REDIS_REDIRECTION_CACHE_PREFIX}"
       url-counter-key: "${URL_COUNTER_KEY}"
       status-hash-key: "${REDIRECTION_CACHE_STATUS_HASH_KEY}"
-      long-url-hash-key: "${REDIRECTION_CACHE_LONG_URL_HASH_KEY}"
+      original-url-hash-key: "${REDIRECTION_CACHE_LONG_URL_HASH_KEY}"
+      email-hash-key: "${REDIS_EMAIL_HASH_KEY}"
+      email-to-refresh-token-prefix: "${REDIS_EMAIL_TO_REFRESH_TOKEN_PREFIX}"
+      token-hash-key: "${REDIS_TOKEN_HASH_KEY}"
+      refresh-token-to-email-key-prefix: "${REDIS_REFRESH_TOKEN_TO_EMAIL_KEY_PREFIX}"
+
 
   redirection:
     pages:
@@ -93,6 +103,7 @@ smart-link:
       track-page: "${TRACK_PAGE}"
       suspicious-warning-page: "${SUSPICIOUS_WARNING_PAGE}"
       malicious-page: "${MALICIOUS_PAGE}"
+
 
   email:
     provider-configs:
@@ -110,17 +121,24 @@ smart-link:
       link-created: "${EMAIL_LINK_CREATED_SUBJECT}"
       welcome: "${EMAIL_WELCOME_SUBJECT}"
 
+
   exception:
     messages:
       link-not-found: "${EXC_MSG_LINK_NOT_FOUND}"
-      invalid-link-hash: "${EXC_MSG_INVALID_LINK_HASH:}"
+      invalid-link-hash: "${EXC_MSG_INVALID_LINK_HASH}"
       user-not-found: "${EXC_MSG_USER_NOT_FOUND}"
       link-scan-not-found: "${EXC_MSG_LINK_SCAN_NOT_FOUND}"
-      username-already-exists: "${EXC_MSG_USERNAME_EXISTS}"
       link-already-reported: "${EXC_MSG_LINK_ALREADY_REPORTED}"
       invalid-otp: "${EXC_MSG_INVALID_OTP}"
       missing-update-fields: "${EXC_MSG_MISSING_FIELDS}"
       sha256-unavailable: "${EXC_MSG_SHA256_UNAVAILABLE}"
+      user-with-email-exists: "${EXC_MSG_USER_WITH_EMAIL_EXISTS}"
+      auth-exception: "${EXC_MSG_AUTH_EXCEPTION}"
+      validation-exception: "${EXC_MSG_VALIDATION_EXCEPTION}"
+      authentication-failed: "${EXC_MSG_AUTHENTICATION_FAILED}"
+      access-denied: "${EXC_MSG_ACCESS_DENIED}"
+      internal-server-error: "${EXC_MSG_INTERNAL_SERVER_ERROR}"
+
 
   ip-info:
     configs:
@@ -129,5 +147,5 @@ smart-link:
 
 logging:
   level:
-    org.apache.kafka: WARN
-    org.springframework.kafka: WARN
+    org.apache.kafka: "${LOG_LEVEL_APACHE_KAFKA}"
+    org.springframework.kafka: "${LOG_LEVEL_SPRING_KAFKA}"
