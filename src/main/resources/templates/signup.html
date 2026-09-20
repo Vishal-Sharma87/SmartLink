@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments/head :: head('SmartLink — Sign up')}"></head>
+<body>
+<div th:replace="~{fragments/navbar-public :: navbar-public}"></div>
+<main class="container auth-layout">
+    <section class="auth-intro">
+        <p class="kicker">ACCOUNT ACCESS</p>
+        <h1>Build your link workspace.</h1>
+        <p class="lede">Create an account to shorten URLs, manage your links, and review their recorded activity.</p>
+    </section>
+    <section class="auth-panel panel-stack">
+        <p class="kicker">SIGN UP</p>
+        <h2>Start with your details.</h2>
+        <div th:replace="~{fragments/alerts :: alert}"></div>
+        <form class="form-stack" action="/auth/signup/initiate" method="post" aria-label="Sign up form" data-signup-form>
+            <div class="field-grid">
+                <label for="signup-first-name">First name
+                    <input id="signup-first-name" name="firstName" autocomplete="given-name" maxlength="100" required>
+                </label>
+                <label for="signup-last-name">Last name
+                    <input id="signup-last-name" name="lastName" autocomplete="family-name" maxlength="100" required>
+                </label>
+            </div>
+            <label for="signup-email">Email
+                <input id="signup-email" name="email" type="email" autocomplete="email" maxlength="254" required>
+            </label>
+            <label for="signup-password">Password
+                <input id="signup-password" name="password" type="password" autocomplete="new-password" minlength="6" maxlength="128" required data-password-input>
+            </label>
+            <button class="button button-primary" type="submit">Continue to verification</button>
+            <p class="form-note">Account creation uses the backend’s email OTP flow.</p>
+        </form>
+        <p class="auth-switch">Already have an account? <a th:href="@{/login}">Log in</a></p>
+    </section>
+</main>
+<div th:replace="~{fragments/footer :: footer}"></div>
+<script defer th:src="@{/js/signup.js}"></script>
+</body>
+</html>
