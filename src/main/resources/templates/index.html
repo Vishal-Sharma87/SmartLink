@@ -1,75 +1,61 @@
 <!DOCTYPE html>
 <html lang="en" xmlns:th="http://www.thymeleaf.org">
-
-<head th:replace="~{fragments/head :: head('SmartLink — Shorten. Share. Track.')}"></head>
-
+<head th:replace="~{fragments/head :: head('SmartLink — Short links with context')}"></head>
 <body>
-    <div th:replace="~{fragments/navbar :: navbar}"></div>
-    <main>
-        <section class="hero container">
-            <div class="hero-copy">
-                <span class="eyebrow">SECURE LINK MANAGEMENT</span>
-                <h1>Shorten. Share.<br><span class="text-primary">Track.</span></h1>
-                <p class="hero-text">SmartLink makes it simple to create, manage, and understand your link — with safety
-                    checks that help protect every click.</p>
-                <div class="hero-actions">
-                    <a class="button button-primary" th:href="@{/auth?mode=signup}">Get started <span>→</span></a>
-                    <a class="button button-secondary" th:href="@{/auth}">Login</a>
+<div th:replace="~{fragments/navbar-public :: navbar-public}"></div>
+<main>
+    <section class="container hero hero-grid">
+        <div class="hero-copy">
+            <p class="kicker">LINKS, WITH CONTEXT</p>
+            <h1>Short links with useful context.</h1>
+            <p class="lede">SmartLink helps you create shareable links, review their safety state, and understand the click context recorded for links you own.</p>
+            <div class="action-row">
+                <a class="button button-primary" th:href="@{/signup}">Create an account</a>
+                <a class="button button-secondary" th:href="@{/login}">Log in</a>
+            </div>
+        </div>
+        <div class="hero-panel" aria-label="SmartLink product overview">
+            <p class="panel-label">SMARTLINK WORKSPACE</p>
+            <div class="hero-stat"><span>Link safety</span><strong>Visible</strong></div>
+            <div class="hero-stat"><span>Click context</span><strong>Useful</strong></div>
+            <div class="hero-stat"><span>Workflow</span><strong>Focused</strong></div>
+        </div>
+    </section>
+    <section class="container section" aria-labelledby="capabilities-heading">
+        <div class="section-heading">
+            <p class="kicker">CAPABILITIES</p>
+            <h2 id="capabilities-heading">A focused link workflow.</h2>
+        </div>
+        <div class="card-grid card-grid-2">
+            <article class="card home-capability-card">
+                <span class="icon-mark">01</span>
+                <h3>Create and manage</h3>
+                <p>Turn an original URL into a SmartLink, then review your links and their current safety states.</p>
+                <div class="action-row">
+                    <a class="button button-secondary button-small" th:href="@{/shorten}">Shorten a URL</a>
+                    <a class="button button-ghost button-small" th:href="@{/links}">View My Links</a>
                 </div>
-                <div class="trust-row"><span class="trust-dot"></span> Built for safer sharing and smarter decisions
-                </div>
-            </div>
-            <div class="product-preview" aria-label="SmartLink dashboard preview">
-                <div class="preview-top"><span class="window-dots"><i></i><i></i><i></i></span><span>smartlink /
-                        dashboard</span></div>
-                <div class="preview-body">
-                    <div class="preview-sidebar"><strong>SmartLink</strong><span class="active">Dashboard</span><span>My
-                            link</span><span>Reports</span></div>
-                    <div class="preview-main">
-                        <div class="preview-heading"><span><b>Good morning</b><small>Your link at a
-                                    glance</small></span><em>+ Create link</em></div>
-                        <div class="preview-cards">
-                            <div><small>Total link</small><b>128</b><span>↗ 12% this month</span></div>
-                            <div><small>Total clicks</small><b>24.8k</b><span>↗ 8.4% this month</span></div>
-                        </div>
-                        <div class="preview-table">
-                            <div><span>Original URL</span><span>Status</span><span>Clicks</span></div>
-                            <div><span>docs.smartlink.dev/guide</span><strong>SAFE</strong><span>1,284</span></div>
-                            <div><span>product.example.com/launch</span><strong>SAFE</strong><span>842</span></div>
-                            <div><span>newsletter.example.com</span><strong
-                                    class="preview-warn">REVIEW</strong><span>319</span></div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </section>
-        <section class="feature-section container">
-            <div class="section-heading"><span class="eyebrow">EVERYTHING YOU NEED</span>
-                <h2>Links that work harder for you.</h2>
-                <p>One focused workspace for sharing, managing, and protecting your link.</p>
-            </div>
-            <div class="feature-grid">
-                <article class="feature-card"><span class="feature-icon purple">↗</span>
-                    <h3>Smart link management</h3>
-                    <p>Create and organize short URLs without the clutter.</p>
-                </article>
-                <article class="feature-card"><span class="feature-icon green">✓</span>
-                    <h3>Security first</h3>
-                    <p>Analyze destinations for potentially malicious URLs before sharing.</p>
-                </article>
-                <article class="feature-card"><span class="feature-icon blue">◌</span>
-                    <h3>Useful analytics</h3>
-                    <p>Understand clicks and basic audience context for every link.</p>
-                </article>
-                <article class="feature-card"><span class="feature-icon orange">!</span>
-                    <h3>Community safety</h3>
-                    <p>Report suspicious or abusive destinations with a verified report.</p>
-                </article>
-            </div>
-        </section>
-    </main>
-    <div th:replace="~{fragments/footer :: footer}"></div>
-    <script th:src="@{/js/site.js}"></script>
+            </article>
+            <article class="card home-capability-card">
+                <span class="icon-mark">02</span>
+                <h3>Understand activity</h3>
+                <p>Open analytics for a specific link you own and review the click context recorded by SmartLink.</p>
+                <a class="button button-ghost button-small" th:href="@{/links}">Choose a link</a>
+            </article>
+            <article class="card home-capability-card">
+                <span class="icon-mark">03</span>
+                <h3>Support link safety</h3>
+                <p>Safety processing and destination states help make link handling more visible before sharing.</p>
+            </article>
+            <article class="card home-capability-card">
+                <span class="icon-mark">04</span>
+                <h3>Report a problem</h3>
+                <p>Use the email-verified reporting flow to tell SmartLink about a problematic short link.</p>
+                <a class="button button-ghost button-small" th:href="@{/report-abuse-page}">Report abuse</a>
+            </article>
+        </div>
+    </section>
+</main>
+<div th:replace="~{fragments/footer :: footer}"></div>
 </body>
-
 </html>

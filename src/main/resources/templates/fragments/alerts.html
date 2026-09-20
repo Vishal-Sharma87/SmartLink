@@ -1,10 +1,9 @@
 <!DOCTYPE html>
 <html lang="en" xmlns:th="http://www.thymeleaf.org">
-
 <body>
-    <div th:fragment="alert" class="alert hidden" role="status" data-alert>
-        <span data-alert-message></span>
-    </div>
+<div th:fragment="alert" class="notice is-hidden" role="status" aria-live="polite" data-alert>
+    <strong class="notice-title" th:text="${noticeTitle ?: 'Status'}">Status</strong>
+    <span th:text="${noticeMessage ?: 'Information will appear here.'}">Information will appear here.</span>
+</div>
 </body>
-
 </html>

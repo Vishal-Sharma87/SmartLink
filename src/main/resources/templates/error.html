@@ -1,24 +1,5 @@
 <!DOCTYPE html>
-<html lang="en">
-
-<head>
-    <title>SmartLink — Link not found</title>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-
-    <link rel="stylesheet" href="/css/style.css" />
-</head>
-
-<body class="auth-page">
-    <div class="auth-shell">
-        <div class="auth-card centered error-card">
-            <span class="eyebrow">SMARTLINK</span>
-            <h1 class="error-code">404</h1>
-            <h2>Link not found</h2>
-            <p>This short link does not exist, has expired, or may be malformed.</p>
-            <a class="button button-primary" href="/">Return home</a>
-        </div>
-    </div>
-</body>
-
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments/head :: head('SmartLink — Link unavailable')}"></head>
+<body><main class="container centered-layout"><section class="panel-stack centered"><p class="kicker">SMARTLINK</p><h1>Link unavailable</h1><p class="lede">This short link could not be resolved.</p><a class="button button-secondary" th:href="@{/}">Return home</a></section></main></body>
 </html>

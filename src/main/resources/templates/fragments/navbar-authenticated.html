@@ -1,0 +1,21 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<body>
+<header class="site-header" th:fragment="navbar-authenticated">
+    <div class="container header-inner">
+        <a class="brand" th:href="@{/dashboard}" aria-label="SmartLink dashboard">
+            <span class="brand-mark" aria-hidden="true">S</span>
+            <span>SmartLink</span>
+        </a>
+        <button class="menu-toggle" type="button" aria-expanded="false" aria-controls="site-navigation"
+                data-menu-toggle>Menu</button>
+        <nav id="site-navigation" class="site-navigation" aria-label="Primary navigation" data-navigation>
+            <a th:href="@{/shorten}">Shorten URL</a>
+            <a th:href="@{/links}">My Links</a>
+            <span class="nav-divider" aria-hidden="true"></span>
+            <button class="button button-secondary button-small" type="button" data-logout>Log out</button>
+        </nav>
+    </div>
+</header>
+</body>
+</html>
