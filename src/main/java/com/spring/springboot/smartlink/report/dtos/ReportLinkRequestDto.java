@@ -1,39 +1,21 @@
 package com.spring.springboot.smartlink.report.dtos;
 
 import com.spring.springboot.smartlink.enums.ReportCause;
-import jakarta.validation.constraints.Email;
-import jakarta.validation.constraints.NotBlank;
-import jakarta.validation.constraints.NotNull;
-import lombok.AllArgsConstructor;
-import lombok.Builder;
-import lombok.Data;
-import lombok.NoArgsConstructor;
 
 import java.util.List;
+import jakarta.validation.constraints.Email;
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotEmpty;
+import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.Pattern;
+import jakarta.validation.constraints.Size;
+import org.hibernate.validator.constraints.URL;
 
-@Data
-@NoArgsConstructor
-@AllArgsConstructor
-@Builder
-public class ReportLinkRequestDto {
-
-    @NotBlank
-    @NotNull
-    private String reporterName;
-
-    @Email
-    private String reporterEmail;
-
-    @NotBlank
-    @NotNull
-    private String linkToReport;
-
-    @NotNull
-    private List<ReportCause> cause;
-
-    private String description;
-
-    @NotBlank
-    @NotNull
-    private String otp;
+public record ReportLinkRequestDto(
+        @NotBlank @Size(max = 100) String reporterName,
+        @NotBlank @Email @Size(max = 254) String reporterEmail,
+        @NotBlank @Size(max = 2048) @URL String linkToReport,
+        @NotNull @NotEmpty List<ReportCause> cause,
+        @Size(max = 2000) String description,
+        @NotBlank @Size(min = 6, max = 6) @Pattern(regexp = "\\d{6}") String otp) {
 }

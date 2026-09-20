@@ -24,15 +24,15 @@ public class ReportLinkService {
 
     public String tryAcceptingReport(@Valid ReportLinkRequestDto dto) {
 
-        if (otpService.isInvalidOtp(dto.getReporterEmail(), dto.getOtp())) {
+        if (otpService.isInvalidOtp(dto.reporterEmail(), dto.otp())) {
             log.warn("Abuse report rejected because OTP validation failed");
             throw new InvalidOTPExceptionSmartLink(exceptionMessages.invalidOtp());
         }
 
-        // actualUrl = domain/shortCode
+        // linkToReport = domain/shortCode
         // key = shortCode
 
-        String[] parts = dto.getLinkToReport().split("/");
+        String[] parts = dto.linkToReport().split("/");
         String shortCode = parts[parts.length - 1];
 
         boolean alreadyReported = mongoReportService.isAlreadyReported(shortCode, dto);

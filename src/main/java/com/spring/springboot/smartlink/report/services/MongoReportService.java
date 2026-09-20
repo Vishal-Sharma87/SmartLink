@@ -27,11 +27,11 @@ public class MongoReportService {
         this.mongoTemplate = mongoTemplate;
     }
 
-    public boolean isAlreadyReported(String hashedKey, @Valid ReportLinkRequestDto dto) {
+    public boolean isAlreadyReported(String shortCode, @Valid ReportLinkRequestDto dto) {
         Query query = new Query();
         Criteria criteria = new Criteria().andOperator(
-                Criteria.where(linkKeys.hashedKey()).is(hashedKey),
-                Criteria.where(abuseReportKeys.reporterEmail()).is(dto.getReporterEmail())
+                Criteria.where(linkKeys.shortCode()).is(shortCode),
+                Criteria.where(abuseReportKeys.reporterEmail()).is(dto.reporterEmail())
 
         );
 

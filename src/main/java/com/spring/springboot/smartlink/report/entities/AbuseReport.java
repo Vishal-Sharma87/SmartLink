@@ -7,7 +7,6 @@ import jakarta.validation.constraints.NotNull;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
-import lombok.NoArgsConstructor;
 import org.bson.types.ObjectId;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.mongodb.core.mapping.Document;
@@ -17,30 +16,29 @@ import java.util.List;
 
 @Data
 @Document(collection = "link_reports")
-@NoArgsConstructor
 @AllArgsConstructor
 @Builder
 public class AbuseReport {
 
     @Id
-    private ObjectId id;
+    private final ObjectId id;
 
     @NotNull
     @NotBlank
-    private String hashedKeyOfLink;
+    private final String shortCode;
 
     @NotBlank
     @NotNull
-    private String reporterName;
+    private final String reporterName;
 
     @Email
-    private String reporterEmail;
+    private final String reporterEmail;
 
-    private List<ReportCause> cause;
+    private final List<ReportCause> cause;
 
-    private String description;
+    private final String description;
 
-    private LocalDateTime createdAt;
+    private final LocalDateTime createdAt;
 
-    private String reportStatus;
+    private final String reportStatus;
 }

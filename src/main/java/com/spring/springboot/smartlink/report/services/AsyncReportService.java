@@ -48,9 +48,9 @@ public class AsyncReportService {
     private void processReport(String shortCode, ReportLinkRequestDto dto) {
         log.info("Asynchronous abuse-report processing started for short code {}", shortCode);
 
-        String linkToReport = dto.getLinkToReport();
-        String reporterName = dto.getReporterName();
-        String reporterEmail = dto.getReporterEmail();
+        String linkToReport = dto.linkToReport();
+        String reporterName = dto.reporterName();
+        String reporterEmail = dto.reporterEmail();
 
         int newReportCount = mongoLinkService.incrementAndGetReportCount(shortCode);
 
@@ -63,9 +63,9 @@ public class AsyncReportService {
                 .reporterName(reporterName)
                 .reporterEmail(reporterEmail)
                 .reportStatus("SUCCESSFUL")
-                .cause(dto.getCause())
-                .description(dto.getDescription())
-                .hashedKeyOfLink(shortCode)
+                .cause(dto.cause())
+                .description(dto.description())
+                .shortCode(shortCode)
                 .createdAt(LocalDateTime.now())
                 .build();
 
