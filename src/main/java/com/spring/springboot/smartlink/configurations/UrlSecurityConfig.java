@@ -1,5 +1,6 @@
 package com.spring.springboot.smartlink.configurations;
 
+import com.spring.springboot.smartlink.advices.handler.SecurityExceptionHandlers;
 import com.spring.springboot.smartlink.jwt.filter.JwtFilter;
 import com.spring.springboot.smartlink.jwt.services.UserDetailsServiceImpl;
 import lombok.RequiredArgsConstructor;
@@ -24,6 +25,7 @@ public class UrlSecurityConfig {
 
     private final UserDetailsServiceImpl userDetailsService;
     private final JwtFilter jwtFilter;
+    private final SecurityExceptionHandlers securityExceptionHandlers;
 
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
@@ -37,12 +39,16 @@ public class UrlSecurityConfig {
                         .requestMatchers("/user", "/user/**").hasRole("USER")
                         .requestMatchers(
                                 "/auth/**", "/", "/home", "/about", "/auth", "/login", "/signup", "/signup/verify",
-                                "/dashboard", "/analytics", "/report-abuse-page", "/report", "/css/**", "/js/**",
-                                "/favicon.ico", "/verify/**", "/report-abuse/**", "/api/**")
+                                "/dashboard", "/shorten", "/links", "/analytics", "/report-abuse-page", "/report", "/css/**", "/js/**",
+                                "/icons/**", "/verify/**", "/report-abuse/**", "/api/**")
                         .permitAll()
                         .anyRequest().authenticated())
                 // Enable JWT based Authentication
                 .addFilterBefore(jwtFilter, UsernamePasswordAuthenticationFilter.class)
+
+                .exceptionHandling(exceptions -> exceptions
+                        .authenticationEntryPoint(securityExceptionHandlers)
+                        .accessDeniedHandler(securityExceptionHandlers))
 
                 // Disable CSRF for simplicity (only if APIs, not for forms)
                 .csrf(AbstractHttpConfigurer::disable);

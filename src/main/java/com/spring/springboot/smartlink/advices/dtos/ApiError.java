@@ -1,4 +1,4 @@
-package com.spring.springboot.smartlink.advices;
+package com.spring.springboot.smartlink.advices.dtos;
 
 import lombok.Data;
 

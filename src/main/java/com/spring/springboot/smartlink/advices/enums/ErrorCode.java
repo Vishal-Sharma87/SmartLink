@@ -1,4 +1,4 @@
-package com.spring.springboot.smartlink.advices;
+package com.spring.springboot.smartlink.advices.enums;
 
 import lombok.Getter;
 import org.springframework.http.HttpStatus;
@@ -12,7 +12,13 @@ public enum ErrorCode {
     USERNAME_ALREADY_EXISTS(409),
     LINK_ALREADY_REPORTED(409),
     INVALID_OTP(401),
-    MISSING_UPDATE_FIELDS(400);
+    MISSING_UPDATE_FIELDS(400),
+    INVALID_REFRESH_TOKEN(401),
+    PENDING_SIGNUP_NOT_FOUND(404),
+    INVALID_REQUEST(400),
+    AUTHENTICATION_FAILED(401),
+    ACCESS_DENIED(403),
+    INTERNAL_SERVER_ERROR(500);
 
     private final HttpStatus httpStatus;
 

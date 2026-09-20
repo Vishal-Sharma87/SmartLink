@@ -8,9 +8,14 @@ public record ExceptionMessages(
                 String invalidLinkHash,
                 String userNotFound,
                 String linkScanNotFound,
-                String usernameAlreadyExists,
+                String userWithEmailExists,
                 String linkAlreadyReported,
                 String invalidOtp,
                 String missingUpdateFields,
-                String sha256Unavailable) {
+                String sha256Unavailable,
+                String authException,
+                String validationException,
+                String authenticationFailed,
+                String accessDenied,
+                String internalServerError) {
 }

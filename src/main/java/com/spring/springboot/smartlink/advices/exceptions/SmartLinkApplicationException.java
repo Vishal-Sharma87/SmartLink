@@ -1,6 +1,6 @@
 package com.spring.springboot.smartlink.advices.exceptions;
 
-import com.spring.springboot.smartlink.advices.ErrorCode;
+import com.spring.springboot.smartlink.advices.enums.ErrorCode;
 import lombok.Getter;
 
 @Getter
