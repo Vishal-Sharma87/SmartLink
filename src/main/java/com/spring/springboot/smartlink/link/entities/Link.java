@@ -8,7 +8,7 @@ import org.springframework.data.annotation.Id;
 import org.springframework.data.mongodb.core.index.Indexed;
 import org.springframework.data.mongodb.core.mapping.Document;
 
-import java.util.Date;
+import java.time.Instant;
 import java.util.List;
 
 @Document(collection = "links")
@@ -17,17 +17,15 @@ import java.util.List;
 public class Link {
 
     @Id
-    private Long id;
+    private final String shortCode;
 
-    private String actualUrl;
-
-    private String hashedKey;
+    private final String originalUrl;
 
     // owner of link, for analysis purposes
     @Indexed
-    private String ownerUserName;
+    private final String ownerEmail;
 
-    private Date linkCreationTime;
+    private final Instant createdAt;
 
     private Verdict status;
 
@@ -38,6 +36,6 @@ public class Link {
     // action on it
     private int reportCount;
 
-    private Integer clickCount;
+    private int clickCount;
 
 }

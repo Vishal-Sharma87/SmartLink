@@ -23,10 +23,9 @@ import com.spring.springboot.smartlink.virustotal.services.VirusTotalService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
-import reactor.core.publisher.Mono;
 
+import java.time.Instant;
 import java.util.ArrayList;
-import java.util.Date;
 import java.util.List;
 
 @Service
@@ -47,61 +46,61 @@ public class LinkService {
     private final ApplicationConfigs applicationConfigs;
     private final ResponseMessage responseMessage;
 
-    public LinkCreationResponseDto initializeCreation(String urlToShort, String userName) {
+    public LinkCreationResponseDto initializeCreation(String urlToShort, String userEmail) {
         Long urlCounter = redisService.getUrlCounter();
 
         String shortCode = Base62.encode(urlCounter);
         String shortUrl = buildShortUrl(shortCode);
 
-        LinkCreationPayload dtoToCreate = LinkCreationPayload.builder()
-                .shortUrl(shortUrl)
-                .longUrl(urlToShort)
-                .ownerUserName(userName)
-                .build();
+        LinkCreationPayload dtoToCreate = new LinkCreationPayload(
+                urlToShort,
+                userEmail,
+                shortUrl
+        );
 
         eventPublisher.publish(kafkaTopics.linkCreation(), dtoToCreate);
 
-        log.info("Queued asynchronous link creation for short code {} and user {}", shortCode, userName);
+        log.info("Asynchronous link creation queued for shortCode={}", shortCode);
 
-        return LinkCreationResponseDto
-                .builder()
-                .shortUrl(shortUrl)
-                .message(responseMessage.linkCreationPending())
-                .status(LinkStatus.PENDING)
-                .build();
+        return new LinkCreationResponseDto(
+                responseMessage.linkCreationPending(),
+                LinkStatus.PENDING,
+                shortUrl
+        );
     }
 
-    public LinkQueryResponseDto getAllLinksOfAnUser(String userName) {
-        List<Link> allLinksOfAnUser = mongoLinkService.getAllLinksOfAnUser(userName);
+    public LinkQueryResponseDto getAllLinksOfAnUser(String userEmail) {
+        List<Link> allLinksOfAnUser = mongoLinkService.getAllLinksOfAnUser(userEmail);
         List<LinkAsResponseDto> allLinksOfAnUserDtos = allLinksOfAnUser
                 .stream()
                 .map(this::convertActualLinkToResponseLink)
                 .toList();
 
-        return LinkQueryResponseDto.builder()
-                .links(allLinksOfAnUserDtos)
-                .message(responseMessage.allLinksOfUserMessage())
-                .build();
+        return new LinkQueryResponseDto(
+                allLinksOfAnUserDtos,
+                responseMessage.allLinksOfUserMessage()
+        );
     }
 
-    public String deleteLinkOfUser(String userName, String hash) {
-        Long idToDelete = Base62.decode(hash, exceptionMessages.invalidLinkHash());
+    public String deleteLinkOfUser(String userEmail, String shortCode) {
 
-        if (hash.isEmpty() || isAfterLastCounter(idToDelete))
-            throw new LinkNotFoundExceptionSmartLink(String.format(exceptionMessages.linkNotFound(), hash));
+        if (shortCode.isEmpty() || isNotInCounterRange(Base62.decode(shortCode, exceptionMessages.invalidLinkHash())))
+            throw new LinkNotFoundExceptionSmartLink(String.format(exceptionMessages.linkNotFound(), shortCode));
 
-        mongoLinkService.deleteLinkOfUserById(idToDelete, userName);
+        log.info("Link deletion initiated for shortCode={}", shortCode);
+        mongoLinkService.deleteLinkOfUserByShortCode(shortCode, userEmail);
+        log.info("Link deletion completed for shortCode={}", shortCode);
 
         return responseMessage.linkDeleted();
     }
 
-    public String deleAllLinkOfUser(String userName) {
-        mongoLinkService.deleteAllLinksOfAnUser(userName);
+    public String deleAllLinkOfUser(String userEmail) {
+        mongoLinkService.deleteAllLinksOfAnUser(userEmail);
 
         return responseMessage.allLinksOfUserDeleted();
     }
 
-    public LinkCreationResponseDto initializeCreationSync(String urlToShort, String userName) {
+    public LinkCreationResponseDto initializeCreationSync(String urlToShort, String email) {
 
         /*
          * will do following steps
@@ -116,62 +115,51 @@ public class LinkService {
 
         String shortCode = Base62.encode(urlCounter);
 
-        Mono<Verdict> verdict = virusTotalService.scanUrl(urlToShort, shortCode);
+        Verdict verdict = virusTotalService.scanUrl(urlToShort, shortCode).block();
 
         save(Link.builder()
-                .id(urlCounter)
-                .actualUrl(urlToShort)
-                .hashedKey(shortCode)
-                .linkCreationTime(new Date())
-                .status(verdict.block())
-                .ownerUserName(userName)
+                .originalUrl(urlToShort)
+                .shortCode(shortCode)
+                .createdAt(Instant.now())
+                .status(verdict)
+                .ownerEmail(email)
                 .abuseReports(new ArrayList<>())
-                .reportCount(0)
-                .clickCount(0)
                 .build());
 
-        log.info("Synchronous link creation completed for short code {} and user {} with verdict {}", shortCode,
-                userName, verdict.block());
+        log.info("Synchronous link creation completed for shortCode={} with verdict={}", shortCode, verdict);
 
         String shortUrl = buildShortUrl(shortCode);
 
-        return LinkCreationResponseDto
-                .builder()
-                .shortUrl(shortUrl)
-                .message(responseMessage.linkCreated())
-                .status(LinkStatus.ACTIVE)
-                .build();
+        return new LinkCreationResponseDto(
+                responseMessage.linkCreated(),
+                LinkStatus.ACTIVE,
+                shortUrl
+        );
     }
 
-    public void save(Link createdLink) {
-        linkRepository.save(createdLink);
-        log.debug("Saved link with short code {} and verdict {}", createdLink.getHashedKey(), createdLink.getStatus());
+    public void save(Link link) {
+        linkRepository.save(link);
     }
 
-    public LinkAsResponseDto findLinkOfUser(String hash, String userName) {
-        Long idToFind = Base62.decode(hash, exceptionMessages.invalidLinkHash());
+    public LinkAsResponseDto findLinkOfUser(String shortCode, String userEmail) {
 
-        if (hash.isEmpty() || isAfterLastCounter(idToFind))
-            throw new LinkNotFoundExceptionSmartLink(String.format(exceptionMessages.linkNotFound(), hash));
+        if (shortCode.isEmpty() || isNotInCounterRange(Base62.decode(shortCode, exceptionMessages.invalidLinkHash())))
+            throw new LinkNotFoundExceptionSmartLink(String.format(exceptionMessages.linkNotFound(), shortCode));
 
-        Link link = mongoLinkService.getLinkOfAnUserById(String.valueOf(idToFind), userName);
+        Link link = mongoLinkService.getLinkOfAnUserByShortCode(shortCode, userEmail);
         return convertActualLinkToResponseLink(link);
     }
 
-    public Link getLinkByHash(String hash) {
-        Link link = linkRepository.findById(Base62.decode(hash, exceptionMessages.invalidLinkHash())).orElse(null);
-        if (link == null) {
-            log.debug("No link found for short code {} during analytics processing", hash);
-        }
-        return link;
+    public Link getLinkByShortCode(String shortCode) {
+        return linkRepository.findById(shortCode).orElse(null);
     }
 
     public LinkScanResponse getLinkScanDetails(String shortCode) {
         return linkScanResponseService.getLinkScanResponse(shortCode);
     }
 
-    public boolean isAfterLastCounter(Long counterToCheck) {
-        return redisService.isAfter(counterToCheck);
+    public boolean isNotInCounterRange(Long counterToCheck) {
+        return redisService.isNotInRange(counterToCheck);
     }
 
     private String buildShortUrl(String shortCode) {
@@ -179,15 +167,14 @@ public class LinkService {
     }
 
     private LinkAsResponseDto convertActualLinkToResponseLink(Link link) {
-        return LinkAsResponseDto.builder()
-                .id(link.getId().toString())
-                .actualUrl(link.getActualUrl())
-                .status(link.getStatus())
-                .hashedKey(link.getHashedKey())
-                .clickCnt(link.getClickCount())
-                .reportCnt(link.getReportCount())
-                .creationTime(link.getLinkCreationTime().toInstant())
-                .build();
+        return new LinkAsResponseDto(
+                link.getOriginalUrl(),
+                link.getShortCode(),
+                link.getStatus(),
+                link.getClickCount(),
+                link.getReportCount(),
+                link.getCreatedAt()
+        );
     }
 
     public boolean incrementClickCountIfExists(String shortCode) {

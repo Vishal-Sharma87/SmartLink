@@ -34,13 +34,13 @@ public class VirusTotalService {
     /**
      * Scans a URL and returns the final verdict asynchronously.
      */
-    public Mono<Verdict> scanUrl(String url, String hash) {
-        log.debug("Starting URL safety scan for short code {}", hash);
+    public Mono<Verdict> scanUrl(String url, String shortCode) {
+        log.info("VirusTotal URL analysis requested for shortCode={}", shortCode);
 
         return submitUrlForAnalysis(url)
                 .flatMap(this::pollUntilCompleted)
-                .map(result -> evaluateVerdict(result, hash, url))
-                .doOnError(e -> log.error("VirusTotal scan failed for short code {}",hash,e))
+                .map(result -> evaluateVerdict(result, shortCode, url))
+                .doOnError(e -> log.error("VirusTotal URL analysis failed for shortCode={}", shortCode, e))
                 .onErrorResume(e -> Mono.just(Verdict.UNVERIFIED));
     }
 
@@ -92,7 +92,7 @@ public class VirusTotalService {
      */
     private Verdict evaluateVerdict(
             AnalysisResultOfVT result,
-            String hash,
+            String shortCode,
             String url) {
 
         AnalysisResultOfVT.Stats stats =
@@ -100,6 +100,6 @@ public class VirusTotalService {
                         .getAttributes()
                         .getStats();
 
-        return verdictEvaluationService.evaluate(stats, hash, url);
+        return verdictEvaluationService.evaluate(stats, shortCode, url);
     }
 }

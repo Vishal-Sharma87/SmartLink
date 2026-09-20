@@ -1,13 +1,10 @@
 package com.spring.springboot.smartlink.link.dtos;
 
 import jakarta.validation.constraints.NotBlank;
-import jakarta.validation.constraints.NotNull;
-import lombok.Data;
+import jakarta.validation.constraints.Size;
+import org.hibernate.validator.constraints.URL;
 
-@Data
-public class UrlToShortRequestDto {
-
-    @NotNull(message = "URL cannot be null")
-    @NotBlank(message = "URL cannot be blank")
-    private String actualUrl;
+public record UrlToShortRequestDto(
+    @NotBlank @Size(max = 2048) @URL String originalUrl
+) {
 }

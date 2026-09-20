@@ -2,7 +2,7 @@ package com.spring.springboot.smartlink.utils;
 
 import java.util.regex.Pattern;
 
-import com.spring.springboot.smartlink.advices.exceptions.InvalidLinkHashExceptionSmartLink;
+import com.spring.springboot.smartlink.advices.exceptions.InvalidShortCodeException;
 
 public final class Base62 {
 
@@ -29,7 +29,7 @@ public final class Base62 {
 
     public static Long decode(String hash, String invalidHashMessage) {
         if (hash == null || !HASH_PATTERN.matcher(hash).matches()) {
-            throw new InvalidLinkHashExceptionSmartLink(String.format(invalidHashMessage, hash));
+            throw new InvalidShortCodeException(String.format(invalidHashMessage,  hash));
         }
 
         long res = 0L;
@@ -37,7 +37,7 @@ public final class Base62 {
         for (int i = 0; i < hash.length(); i++) {
             int ind = CHARS.indexOf(hash.charAt(i));
             if (ind < 0) {
-                throw new InvalidLinkHashExceptionSmartLink(String.format(invalidHashMessage, hash));
+                throw new InvalidShortCodeException(String.format(invalidHashMessage, hash));
             }
             res = res * 62 + ind;
         }

@@ -20,12 +20,12 @@ public class VerdictEvaluationService {
 
     private final LinkScanResponseService linkScanResponseService;
 
-    public Verdict evaluate(AnalysisResultOfVT.Stats stats, String hash, String originalUrl) {
+    public Verdict evaluate(AnalysisResultOfVT.Stats stats, String shortCode, String originalUrl) {
         int total = stats.getHarmless() + stats.getMalicious() + stats.getSuspicious()
                 + stats.getUndetected() + stats.getTimeout();
 
         if (total == 0) {
-            log.warn("No analysis engines returned signals for short code {}; marking as {}", hash, Verdict.UNVERIFIED);
+            log.warn("No analysis engines returned signals for short code {}; marking as {}", shortCode, Verdict.UNVERIFIED);
             return Verdict.UNVERIFIED;
         }
 
@@ -62,13 +62,13 @@ public class VerdictEvaluationService {
                 .timeoutRatio(timeoutRatio)
                 .verdictReason(verdictReason)
                 .originalUrl(originalUrl)
-                .hash(hash)
+                .shortCode(shortCode)
                 .totalEngines(total)
                 .harmlessRatio(harmlessRatio)
                 .build();
 
         linkScanResponseService.saveNew(linkScanResponse);
-        log.info("URL analysis completed for short code {} with verdict {} and reason {}", hash, anaylysedVerdict,
+        log.info("URL analysis completed for short code {} with verdict {} and reason {}", shortCode, anaylysedVerdict,
                 verdictReason);
 
         return anaylysedVerdict;
