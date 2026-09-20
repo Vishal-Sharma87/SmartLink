@@ -32,25 +32,29 @@ public class OtpService {
     }
 
     public void sendOtp(String email) {
-        String generatedOtp = generateFourLengthNumericOtp();
+        String generatedOtp = generateNumericOtp();
         String hashedOtp = hashOtp(generatedOtp);
 
         redisService.saveOTP(email, hashedOtp);
 
+        log.info("OTP dispatch requested");
         emailService.sendOtpEmail(email, generatedOtp);
     }
 
     public boolean isInvalidOtp(String email, String otp) {
-        String hashedOtpToPass = hashOtp(otp);
-
-        return redisService.isInvalidOtp(email, hashedOtpToPass);
+        String otpToVerify = hashOtp(otp);
+        boolean invalid = redisService.isInvalidOtp(email, otpToVerify);
+        if (invalid) {
+            log.warn("OTP verification failed because the OTP was invalid or expired");
+        }
+        return invalid;
     }
 
-    private String generateFourLengthNumericOtp() {
+    private String generateNumericOtp() {
         SecureRandom random = new SecureRandom();
         StringBuilder sb = new StringBuilder(4);
 
-        for (int i = 0; i < 4; i++) {
+        for (int i = 0; i < 6; i++) {
             sb.append(random.nextInt(10)); // 0–9
         }
         return sb.toString();

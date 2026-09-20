@@ -1,6 +1,7 @@
 package com.spring.springboot.smartlink.otp.dto;
 
 import jakarta.validation.constraints.Email;
+import jakarta.validation.constraints.NotBlank;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -12,7 +13,8 @@ import lombok.NoArgsConstructor;
 @Builder
 public class OtpRequestDto {
 
-    @Email(message = "Enter a valid email id.")
+    @NotBlank
+    @Email
     private String email;
 
 }
