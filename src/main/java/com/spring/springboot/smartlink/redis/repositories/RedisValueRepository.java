@@ -4,6 +4,8 @@ import com.spring.springboot.smartlink.redis.keys.RedisKeys;
 import com.spring.springboot.smartlink.redis.scripts.LuaScripts;
 import jakarta.annotation.PostConstruct;
 import org.springframework.data.redis.core.RedisTemplate;
+import org.springframework.data.redis.core.StringRedisTemplate;
+import org.springframework.data.redis.core.ValueOperations;
 import org.springframework.data.redis.core.script.RedisScript;
 import org.springframework.stereotype.Repository;
 
@@ -13,14 +15,16 @@ import java.util.concurrent.TimeUnit;
 @Repository
 public class RedisValueRepository {
 
-    private final RedisTemplate<String, String> redisTemplate;
+    private final StringRedisTemplate redisTemplate;
+    private final ValueOperations<String, String> stringStringValueOperations;
     private final RedisKeys redisKeys;
 
     public RedisValueRepository(
-            RedisTemplate<String, String> redisTemplate,
+            StringRedisTemplate redisTemplate,
             RedisKeys redisKeys) {
 
         this.redisTemplate = redisTemplate;
+        this.stringStringValueOperations = redisTemplate.opsForValue();
         this.redisKeys = redisKeys;
     }
 
@@ -32,7 +36,7 @@ public class RedisValueRepository {
     }
 
     private void seedInitialUrlCounter() {
-        redisTemplate.opsForValue().setIfAbsent(redisKeys.urlCounterKey(), String.valueOf(INITIAL_URL_COUNTER));
+        stringStringValueOperations.setIfAbsent(redisKeys.urlCounterKey(), String.valueOf(INITIAL_URL_COUNTER));
     }
 
     public long getUrlCounter() {
@@ -44,11 +48,15 @@ public class RedisValueRepository {
         return counter;
     }
 
-    public boolean isAfterUrlCounter(Long counterToCheck) {
-        String currentUrlCounterString = redisTemplate.opsForValue().get(redisKeys.urlCounterKey());
-        Long currentUrlCounter;
+    public boolean isNotInRange(Long counterToCheck) {
+        if (counterToCheck < INITIAL_URL_COUNTER) {
+            return true;
+        }
+
+        String currentUrlCounterString = stringStringValueOperations.get(redisKeys.urlCounterKey());
+        long currentUrlCounter;
         if (currentUrlCounterString == null
-                || (currentUrlCounter = Long.parseLong(currentUrlCounterString)) < INITIAL_URL_COUNTER) {
+                || (currentUrlCounter = Long.parseLong(currentUrlCounterString)) < INITIAL_URL_COUNTER ) {
             seedInitialUrlCounter();
 
             // Returning true, as Url_Counter was altered and safest option is to reject the
@@ -60,7 +68,7 @@ public class RedisValueRepository {
     }
 
     public void saveOtpWithDefaultTtl(String email, String hashedOtp) {
-        redisTemplate.opsForValue().set(email, hashedOtp, 10, TimeUnit.MINUTES);
+        stringStringValueOperations.set(email, hashedOtp, 10, TimeUnit.MINUTES);
     }
 
     public boolean isInvalidOtp(String email, String otpToCheck) {

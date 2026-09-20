@@ -4,8 +4,12 @@ import org.springframework.boot.context.properties.ConfigurationProperties;
 
 @ConfigurationProperties(prefix = "smart-link.redis.keys")
 public record RedisKeys(
-                String redirectionCachePrefix,
-                String urlCounterKey,
-                String statusHashKey,
-                String longUrlHashKey) {
+        String emailHashKey,
+        String emailToRefreshTokenPrefix,
+        String tokenHashKey,
+        String refreshTokenToEmailKeyPrefix,
+        String redirectionCachePrefix,
+        String urlCounterKey,
+        String statusHashKey,
+        String originalUrlHashKey) {
 }

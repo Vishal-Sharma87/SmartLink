@@ -1,31 +1,59 @@
 package com.spring.springboot.smartlink.redis.repositories;
-
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.data.redis.core.HashOperations;
 import org.springframework.data.redis.core.RedisTemplate;
+import org.springframework.data.redis.core.StringRedisTemplate;
+import org.springframework.data.redis.core.script.RedisScript;
 import org.springframework.stereotype.Repository;
 
 import java.util.List;
 import java.util.Map;
 
 @Repository
+@Slf4j
 public class RedisHashRepository {
 
-    private final RedisTemplate<String, String> redisTemplate;
+    private final StringRedisTemplate redisTemplate;
+    private final HashOperations<String, String, String> hashOperations;
 
     public RedisHashRepository(
-            RedisTemplate<String, String> redisTemplate) {
+            StringRedisTemplate redisTemplate) {
 
         this.redisTemplate = redisTemplate;
+        this.hashOperations = redisTemplate.opsForHash();
     }
 
-    public List<Object> multiGet(String key, List<Object> hashKeys) {
-        return redisTemplate.opsForHash().multiGet(key, hashKeys);
+    public String get(
+            String key,
+            String hashKey) {
+
+        return hashOperations.get(key, hashKey);
     }
 
-    public void putAll(String key, Map<String, String> hashKeyValueMap) {
-        redisTemplate.opsForHash().putAll(key, hashKeyValueMap);
+    public List<String> multiGet(
+            String key,
+            List<String> hashKeys) {
+
+        return hashOperations.multiGet(key, hashKeys);
+    }
+
+    public void putAll(
+            String key,
+            Map<String, String> hashKeyValueMap) {
+
+        hashOperations.putAll(key, hashKeyValueMap);
     }
 
     public void delete(String key) {
         redisTemplate.delete(key);
+    }
+
+    public void executeRevocationTokenThenSetCurrentScript(
+            RedisScript<Void> script,
+            List<String> keys,
+            String email,
+            String refreshToken) {
+
+        redisTemplate.execute(script, keys, email, refreshToken);
     }
 }
