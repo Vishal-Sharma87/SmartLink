@@ -1,0 +1,19 @@
+name: Deploy SmartLink
+
+on:
+  workflow_dispatch:
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Deploy to Azure VM
+        uses: appleboy/ssh-action@v1
+        with:
+          host: ${{ vars.VM_HOST_IP }}
+          username: ${{ vars.VM_USERNAME }}
+          key: ${{ secrets.SMARTLINK_GITHUB_ACTIONS_SSH_PRIVATE_KEY }}
+          script: |
+            cd SmartLink
+            git pull
+            docker compose up -d --build
