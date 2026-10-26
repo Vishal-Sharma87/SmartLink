@@ -14,3 +14,5 @@ for SECRET_NAME in "${SECRETS[@]}"; do
 	echo "${SECRET_NAME}=${storedValue}" >> .env
 
 done
+
+echo ".env is ready to use!";
