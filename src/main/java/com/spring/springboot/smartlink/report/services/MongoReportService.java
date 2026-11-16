@@ -1,45 +1,51 @@
 package com.spring.springboot.smartlink.report.services;
 
-import com.spring.springboot.smartlink.link.configs.LinkKeys;
-import com.spring.springboot.smartlink.report.configs.AbuseReportKeys;
+import com.spring.springboot.smartlink.link.services.MongoLinkService;
 import com.spring.springboot.smartlink.report.dtos.ReportLinkRequestDto;
 import com.spring.springboot.smartlink.report.entities.AbuseReport;
-import jakarta.validation.Valid;
 import org.springframework.data.mongodb.core.MongoTemplate;
-import org.springframework.data.mongodb.core.query.Criteria;
-import org.springframework.data.mongodb.core.query.Query;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
+import java.time.LocalDateTime;
 
 @Service
 public class MongoReportService {
 
-    private final AbuseReportKeys abuseReportKeys;
-    private final LinkKeys linkKeys;
     private final MongoTemplate mongoTemplate;
+    private final MongoLinkService mongoLinkService;
 
     public MongoReportService(
-            AbuseReportKeys abuseReportKeys,
-            LinkKeys linkKeys,
-            MongoTemplate mongoTemplate) {
+            MongoTemplate mongoTemplate, MongoLinkService mongoLinkService) {
 
-        this.abuseReportKeys = abuseReportKeys;
-        this.linkKeys = linkKeys;
         this.mongoTemplate = mongoTemplate;
+        this.mongoLinkService = mongoLinkService;
     }
 
-    public boolean isAlreadyReported(String shortCode, @Valid ReportLinkRequestDto dto) {
-        Query query = new Query();
-        Criteria criteria = new Criteria().andOperator(
-                Criteria.where(linkKeys.shortCode()).is(shortCode),
-                Criteria.where(abuseReportKeys.reporterEmail()).is(dto.reporterEmail())
+    public void insert(AbuseReport report) {
+        mongoTemplate.insert(report);
+    }
 
-        );
+    @Transactional
+    public int acceptReportAndGetReportCount(ReportLinkRequestDto dto) {
+        String[] parts = dto.linkToReport().split("/");
+        String shortCode = parts[parts.length - 1];
 
-        query.addCriteria(criteria);
+//        1. Create Entity
+        AbuseReport report = AbuseReport.builder()
+                .reporterName(dto.reporterName())
+                .reporterEmail(dto.reporterEmail())
+                .reportStatus("SUCCESSFUL")
+                .cause(dto.cause())
+                .description(dto.description())
+                .shortCode(shortCode)
+                .createdAt(LocalDateTime.now())
+                .build();
 
-        // we will stop finding in db when we find first report entry
-        query.limit(1);
+        // 2. Insert report
+        insert(report);
 
-        return !mongoTemplate.find(query, AbuseReport.class).isEmpty();
+        // 3. Atomically increment reportCount
+        return mongoLinkService.incrementAndGetReportCount(shortCode);
     }
 }

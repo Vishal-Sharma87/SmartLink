@@ -29,9 +29,6 @@ smart-link:
       report-count: "${SMART_LINK_REPORT_COUNT}"
       short-code: "${SMART_LINK_SHORT_CODE}"
 
-    abuse-report:
-      reporter-email: "${SMART_LINK_ABUSE_REPORT_REPORTER_EMAIL}"
-
 
   api-response:
     link-created: "${API_RESPONSE_LINK_CREATED}"

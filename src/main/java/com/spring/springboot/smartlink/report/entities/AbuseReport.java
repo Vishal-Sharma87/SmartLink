@@ -9,6 +9,8 @@ import lombok.Builder;
 import lombok.Data;
 import org.bson.types.ObjectId;
 import org.springframework.data.annotation.Id;
+import org.springframework.data.mongodb.core.index.CompoundIndex;
+import org.springframework.data.mongodb.core.index.CompoundIndexes;
 import org.springframework.data.mongodb.core.mapping.Document;
 
 import java.time.LocalDateTime;
@@ -18,6 +20,13 @@ import java.util.List;
 @Document(collection = "link_reports")
 @AllArgsConstructor
 @Builder
+@CompoundIndexes({
+        @CompoundIndex(
+                name = "shortCode_reporterEmail",
+                def = "{'shortCode': 1, 'reporterEmail': 1}",
+                unique = true
+        )
+})
 public class AbuseReport {
 
     @Id

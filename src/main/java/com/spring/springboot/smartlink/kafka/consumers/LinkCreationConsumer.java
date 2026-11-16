@@ -13,7 +13,6 @@ import org.springframework.kafka.annotation.KafkaListener;
 import org.springframework.stereotype.Service;
 
 import java.time.Instant;
-import java.util.ArrayList;
 
 @Service
 @Slf4j
@@ -68,7 +67,6 @@ public class LinkCreationConsumer {
                 .createdAt(Instant.now())
                 .status(verdict)
                 .ownerEmail(ownerEmail)
-                .abuseReports(new ArrayList<>())
                 .build();
 
         linkService.save(createdLink);

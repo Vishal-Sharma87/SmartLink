@@ -25,7 +25,6 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
 import java.time.Instant;
-import java.util.ArrayList;
 import java.util.List;
 
 @Service
@@ -123,7 +122,6 @@ public class LinkService {
                 .createdAt(Instant.now())
                 .status(verdict)
                 .ownerEmail(email)
-                .abuseReports(new ArrayList<>())
                 .build());
 
         log.info("Synchronous link creation completed for shortCode={} with verdict={}", shortCode, verdict);
@@ -179,5 +177,9 @@ public class LinkService {
 
     public boolean incrementClickCountIfExists(String shortCode) {
         return mongoLinkService.incrementClickCountIfExists(shortCode);
+    }
+
+    public boolean existsById(String shortCode) {
+        return linkRepository.existsById(shortCode);
     }
 }

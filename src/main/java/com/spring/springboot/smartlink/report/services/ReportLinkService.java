@@ -1,6 +1,11 @@
 package com.spring.springboot.smartlink.report.services;
 
+import com.spring.springboot.smartlink.advices.exceptions.LinkNotFoundExceptionSmartLink;
 import com.spring.springboot.smartlink.apiresponse.ResponseMessage;
+import com.spring.springboot.smartlink.enums.Verdict;
+import com.spring.springboot.smartlink.link.services.LinkService;
+import com.spring.springboot.smartlink.link.services.MongoLinkService;
+import com.spring.springboot.smartlink.redis.services.RedisService;
 import com.spring.springboot.smartlink.report.dtos.ReportLinkRequestDto;
 import com.spring.springboot.smartlink.advices.exceptions.InvalidOTPExceptionSmartLink;
 import com.spring.springboot.smartlink.advices.exceptions.LinkAlreadyReportedExceptionSmartLink;
@@ -9,6 +14,7 @@ import com.spring.springboot.smartlink.otp.services.OtpService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.dao.DuplicateKeyException;
 import org.springframework.stereotype.Service;
 
 @Service
@@ -17,10 +23,12 @@ import org.springframework.stereotype.Service;
 public class ReportLinkService {
 
     private final OtpService otpService;
-    private final AsyncReportService asyncReportService;
     private final ExceptionMessages exceptionMessages;
     private final MongoReportService mongoReportService;
     private final ResponseMessage responseMessage;
+    private final LinkService linkService;
+    private final MongoLinkService mongoLinkService;
+    private final RedisService redisService;
 
     public String tryAcceptingReport(@Valid ReportLinkRequestDto dto) {
 
@@ -29,22 +37,27 @@ public class ReportLinkService {
             throw new InvalidOTPExceptionSmartLink(exceptionMessages.invalidOtp());
         }
 
-        // linkToReport = domain/shortCode
-        // key = shortCode
+        try {
+            String[] parts = dto.linkToReport().split("/");
+            String shortCode = parts[parts.length - 1];
 
-        String[] parts = dto.linkToReport().split("/");
-        String shortCode = parts[parts.length - 1];
+            if (!linkService.existsById(shortCode)) {
+                throw new LinkNotFoundExceptionSmartLink(exceptionMessages.linkNotFound());
+            }
 
-        boolean alreadyReported = mongoReportService.isAlreadyReported(shortCode, dto);
+            int newReportCount = mongoReportService.acceptReportAndGetReportCount(dto);
 
-        if (alreadyReported) {
-            log.warn("Duplicate abuse report rejected for short code {}", shortCode);
+            if (newReportCount >= 3) {
+                mongoLinkService.updateStatus(shortCode, Verdict.PENDING_REVERIFICATION);
+                redisService.removeRedirectionCache(shortCode);
+            }
+
+        } catch (DuplicateKeyException e) {
+            log.warn("Abuse report rejected because the link is already reported");
             throw new LinkAlreadyReportedExceptionSmartLink(exceptionMessages.linkAlreadyReported());
         }
 
-        asyncReportService.acceptReport(shortCode, dto);
-        log.info("Abuse report queued for short code {}", shortCode);
-
         return responseMessage.reportAccepted();
     }
+
 }
