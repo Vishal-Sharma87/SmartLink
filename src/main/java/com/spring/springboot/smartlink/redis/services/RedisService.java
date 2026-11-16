@@ -1,8 +1,5 @@
 package com.spring.springboot.smartlink.redis.services;
 
-import com.spring.springboot.smartlink.advices.enums.ErrorCode;
-import com.spring.springboot.smartlink.advices.exceptions.SmartlinkAuthException;
-import com.spring.springboot.smartlink.configurations.ExceptionMessages;
 import com.spring.springboot.smartlink.enums.Verdict;
 import com.spring.springboot.smartlink.redis.keys.RedisKeys;
 import com.spring.springboot.smartlink.redis.repositories.RedisHashRepository;
@@ -12,6 +9,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.redis.core.script.RedisScript;
 import org.springframework.stereotype.Service;
 
+import java.time.Duration;
 import java.util.*;
 
 @Service
@@ -21,17 +19,15 @@ public class RedisService {
     private final RedisKeys redisKeys;
     private final RedisHashRepository redisHashRepository;
     private final RedisValueRepository redisValueRepository;
-    private final ExceptionMessages exceptionMessages;
 
     public RedisService(
             RedisKeys redisKeys,
             RedisHashRepository redisHashRepository,
-            RedisValueRepository redisValueRepository, ExceptionMessages exceptionMessages) {
+            RedisValueRepository redisValueRepository) {
 
         this.redisKeys = redisKeys;
         this.redisHashRepository = redisHashRepository;
         this.redisValueRepository = redisValueRepository;
-        this.exceptionMessages = exceptionMessages;
     }
 
     public Long getUrlCounter() {
@@ -91,28 +87,29 @@ public class RedisService {
                 redisKeys.emailHashKey()
         );
 
+        String ttlMs = String.valueOf(Duration.ofDays(7).toMillis());
+
         redisHashRepository.executeRevocationTokenThenSetCurrentScript(
                 script,
                 keys,
                 email,
-                refreshToken
+                refreshToken,
+                ttlMs
         );
     }
 
-    public String getEmailFromRefreshToken(String refreshToken) {
-        String refreshTokenToEmailKey =redisKeys.refreshTokenToEmailKeyPrefix() + refreshToken;
-        String emailHashKey = redisKeys.emailHashKey();
 
-        String stored = redisHashRepository.get(refreshTokenToEmailKey, emailHashKey);
+    public String invalidatePreviousAndSetCurrentRefreshToken(String oldRefreshToken, String newRefreshToken) {
+        RedisScript<String> rotateRefreshTokenScript = LuaScripts.ROTATE_REFRESH_TOKEN_SCRIPT;
 
-        if (stored == null) {
-            log.warn("Refresh token lookup failed because no active token mapping was found");
-            throw new SmartlinkAuthException(
-                    ErrorCode.INVALID_REFRESH_TOKEN,
-                    exceptionMessages.authException()
-            );
-        }
+        List<String> keys = List.of(
+                redisKeys.emailToRefreshTokenPrefix(),
+                redisKeys.refreshTokenToEmailKeyPrefix(),
+                redisKeys.emailHashKey(),
+                redisKeys.tokenHashKey());
 
-        return stored;
+        String ttlMs = String.valueOf(Duration.ofDays(7).toMillis());
+
+        return redisHashRepository.execute(rotateRefreshTokenScript, keys, oldRefreshToken, newRefreshToken, ttlMs);
     }
 }

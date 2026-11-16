@@ -1,7 +1,6 @@
 package com.spring.springboot.smartlink.redis.repositories;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.redis.core.HashOperations;
-import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.data.redis.core.script.RedisScript;
 import org.springframework.stereotype.Repository;
@@ -52,8 +51,13 @@ public class RedisHashRepository {
             RedisScript<Void> script,
             List<String> keys,
             String email,
-            String refreshToken) {
+            String refreshToken,
+            String ttlMs) {
 
-        redisTemplate.execute(script, keys, email, refreshToken);
+        redisTemplate.execute(script, keys, email, refreshToken, ttlMs);
+    }
+
+    public String execute(RedisScript<String> script, List<String> keys, String oldRefreshToken, String newRefreshToken, String ttlMs) {
+        return redisTemplate.execute(script, keys, oldRefreshToken, newRefreshToken, ttlMs);
     }
 }

@@ -4,6 +4,38 @@ import org.springframework.data.redis.core.script.RedisScript;
 
 public class LuaScripts {
 
+    public static final RedisScript<String> ROTATE_REFRESH_TOKEN_SCRIPT = RedisScript.of("""
+        local emailToTokenKeyPrefix = KEYS[1]
+        local tokenToEmailKeyPrefix = KEYS[2]
+        local refreshTokenHashKey   = KEYS[3]
+        local emailHashKey          = KEYS[4]
+
+        local oldToken = ARGV[1]
+        local newToken = ARGV[2]
+        local ttlMs    = tonumber(ARGV[3])
+
+        local oldTokenKey = tokenToEmailKeyPrefix .. oldToken
+        local email = redis.call('HGET', oldTokenKey, refreshTokenHashKey)
+
+        if not email then
+            return nil
+        end
+
+        local newTokenKey = tokenToEmailKeyPrefix .. newToken
+        local emailKey    = emailToTokenKeyPrefix .. email
+
+        redis.call('DEL', oldTokenKey)
+        redis.call('HSET', newTokenKey, refreshTokenHashKey, email)
+        redis.call('HSET', emailKey, emailHashKey, newToken)
+
+        if ttlMs and ttlMs > 0 then
+            redis.call('PEXPIRE', newTokenKey, ttlMs)
+            redis.call('PEXPIRE', emailKey, ttlMs)
+        end
+
+        return email
+        """, String.class);
+
     private static final String REVOKE_THEN_SET_REFRESH_TOKEN_SCRIPT_CONTENT = """
             local email = ARGV[1]
             local refreshToken = ARGV[2]
@@ -23,6 +55,12 @@ public class LuaScripts {
             
             redis.call('HSET', emailToTokenKey, refreshTokenHashKey, refreshToken)
             redis.call('HSET', tokenToEmailKeyPrefix..refreshToken, emailHashKey, email)
+            
+            local ttlMs = tonumber(ARGV[3])
+            if ttlMs and ttlMs > 0 then
+                redis.call('PEXPIRE', emailToTokenKey, ttlMs)
+                redis.call('PEXPIRE', tokenToEmailKeyPrefix..refreshToken, ttlMs)
+            end
             """;
 
     /**

@@ -35,29 +35,9 @@ public class JwtService {
         this.exceptionMessages = exceptionMessages;
     }
 
-    public AuthTokens generateJwt(String email) {
-
-        Instant currentInstant = Instant.now();
-        Date now = new Date(currentInstant.toEpochMilli());
-        Date jwtExpiry = new Date(
-                currentInstant.plus(Duration.ofMinutes(jwtConfigs.expiryDurationMinutes())).toEpochMilli());
-        Date refreshExpiry = new Date(
-                currentInstant.plus(Duration.ofDays(jwtConfigs.refreshExpiryDays())).toEpochMilli());
-
-        String jwt = Jwts.builder()
-                .subject(email) // sub
-                .issuedAt(now) // iat
-                .expiration(jwtExpiry) // exp
-                .signWith(
-                        Keys.hmacShaKeyFor(jwtConfigs.secretKey().getBytes(StandardCharsets.UTF_8)))
-                .compact();
-
-        String refreshToken = Jwts.builder()
-                .issuedAt(now)
-                .expiration(refreshExpiry)
-                .signWith(
-                        Keys.hmacShaKeyFor(jwtConfigs.secretKey().getBytes(StandardCharsets.UTF_8)))
-                .compact();
+    public AuthTokens generateNewAuthTokenAndRevokeOther(String email) {
+        String jwt = generateJwtFromEmail(email);
+        String refreshToken = generateRefreshToken();
 
         redisService.revokeOtherThenSetCurrentRefreshToken(refreshToken, email);
 
@@ -88,9 +68,47 @@ public class JwtService {
             throw invalidRefreshToken();
         }
 
-        String email = redisService.getEmailFromRefreshToken(refreshToken);
-        return generateJwt(email);
+        String newRefreshToken = generateRefreshToken();
 
+        String email = redisService.invalidatePreviousAndSetCurrentRefreshToken(refreshToken, newRefreshToken);
+
+        if (email == null) {
+            log.warn("Refresh token rotation failed because no active token mapping was found");
+            throw invalidRefreshToken();
+        }
+
+        return new AuthTokens(generateJwtFromEmail(email), newRefreshToken);
+    }
+
+    private String generateJwtFromEmail(String email) {
+
+        Instant currentInstant = Instant.now();
+        Date now = new Date(currentInstant.toEpochMilli());
+        Date refreshExpiry = new Date(
+                currentInstant.plus(Duration.ofDays(jwtConfigs.expiryDurationMinutes())).toEpochMilli());
+
+        return Jwts.builder()
+                .subject(email)
+                .issuedAt(now)
+                .expiration(refreshExpiry)
+                .signWith(
+                        Keys.hmacShaKeyFor(jwtConfigs.secretKey().getBytes(StandardCharsets.UTF_8)))
+                .compact();
+
+    }
+
+    private String generateRefreshToken() {
+        Instant currentInstant = Instant.now();
+        Date now = new Date(currentInstant.toEpochMilli());
+        Date refreshExpiry = new Date(
+                currentInstant.plus(Duration.ofDays(jwtConfigs.refreshExpiryDays())).toEpochMilli());
+
+        return Jwts.builder()
+                .issuedAt(now)
+                .expiration(refreshExpiry)
+                .signWith(
+                        Keys.hmacShaKeyFor(jwtConfigs.secretKey().getBytes(StandardCharsets.UTF_8)))
+                .compact();
     }
 
     private SmartlinkAuthException authenticationTokenFailure() {

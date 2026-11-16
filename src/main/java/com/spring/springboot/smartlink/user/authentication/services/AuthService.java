@@ -146,7 +146,7 @@ public class AuthService {
     }
 
     private AuthTokens buildAuthResponse(String email) {
-        return jwtService.generateJwt(email);
+        return jwtService.generateNewAuthTokenAndRevokeOther(email);
     }
 
     public AuthTokens refreshToken(String refreshToken) {

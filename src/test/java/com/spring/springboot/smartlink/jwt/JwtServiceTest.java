@@ -4,9 +4,7 @@ package com.spring.springboot.smartlink.jwt;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
-import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.when;
 
 import com.spring.springboot.smartlink.configurations.ExceptionMessages;
 import com.spring.springboot.smartlink.jwt.configs.JwtConfigs;
@@ -33,8 +31,6 @@ class JwtServiceTest {
             "v3ry-53cur3-4nd-long-jwt-53cr3t-k3y-2016!";
 
     private static final String EMAIL = "user@example.com";
-    private static final String REFRESH_TOKEN = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJ1c2VyXzk4NzY1NDMyMSIsIm5hbWUiOiJBbGV4IE1lcmNlciIsInJvbGUiOiJhZG1pbiIsImlhdCI6MTc4OTc4NTYwMCwiZXhwIjoyMTA0OTYzMjAwfQ.UNK9kWqjBsdkPKeS2dJmV-aOeZdr4pBfgkfTREMuwAw";
-    private static final String INVALID_REFRESH_TOKEN = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJ1c2VyXzk4NzY1NDMyMSIsIm5hbWUiOiJBbGV4IE1lcmNlciIsInJvbGUiOiJhZG1pbiIsImlhdCI6MTc4OTc4NTYwMCwiZXhwIjoyMTA0OTYzMjAwfQ.UNK9kWqjBsdkPKeS2dJmV-aOeZdr4pBfgkfcremuwAw";
 
 
     private final JwtConfigs jwtConfigs = new JwtConfigs(SECRET_KEY, 15, 30);
@@ -84,7 +80,7 @@ class JwtServiceTest {
     @Test
     void shouldGenerateJwtAndRefreshToken() {
 
-        AuthTokens tokens = jwtService.generateJwt(EMAIL);
+        AuthTokens tokens = jwtService.generateNewAuthTokenAndRevokeOther(EMAIL);
 
         assertNotNull(tokens);
         assertNotNull(tokens.jwtToken());
@@ -98,7 +94,7 @@ class JwtServiceTest {
 
     @Test
     void generatedJwtShouldContainEmailAsSubject() {
-        AuthTokens tokens = jwtService.generateJwt(EMAIL);
+        AuthTokens tokens = jwtService.generateNewAuthTokenAndRevokeOther(EMAIL);
 
         String subject = jwtService.getSubjectFromJwtToken(
                 tokens.jwtToken()
@@ -131,38 +127,5 @@ class JwtServiceTest {
                 Exception.class,
                 () -> jwtService.getSubjectFromJwtToken(invalidToken)
         );
-    }
-
-    @Test
-    void shouldRotateTokensForValidRefreshToken() {
-        when(redisService.getEmailFromRefreshToken(REFRESH_TOKEN))
-                .thenReturn(EMAIL);
-
-        AuthTokens tokens = jwtService.rotateTokensIfValid(REFRESH_TOKEN);
-
-        assertNotNull(tokens);
-        assertNotNull(tokens.jwtToken());
-        assertNotNull(tokens.refreshToken());
-
-        verify(redisService).getEmailFromRefreshToken(REFRESH_TOKEN);
-
-        verify(redisService).revokeOtherThenSetCurrentRefreshToken(
-                tokens.refreshToken(),
-                EMAIL
-        );
-    }
-
-    @Test
-    void shouldNotLookupRedisWhenRefreshTokenJwtIsInvalid() {
-
-        assertThrows(
-                Exception.class,
-                () -> jwtService.rotateTokensIfValid(INVALID_REFRESH_TOKEN)
-        );
-
-        verify(
-                redisService,
-                never()
-        ).getEmailFromRefreshToken(INVALID_REFRESH_TOKEN);
     }
 }
